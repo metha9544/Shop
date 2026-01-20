@@ -175,39 +175,6 @@ th{
   <table id="saleTable"></table>
 </div>
 
-<div class="card" id="billSection" style="display:none">
-  <h3>ใบเสร็จ</h3>
-  <div id="bill" style="
-    background:#fff;
-    padding:20px;
-    border-radius:16px;
-    border:2px dashed #f3b6d4;
-    text-align:center;
-  ">
-    <h2 style="color:#c06c9b; margin:0; text-align:center;">🌸 METIST ✨</h2>
-    <p class="subtitle" style="text-align:center; margin-bottom: 10px;">FLOWER & LUCK</p>
-    <p id="billDate" style="text-align:center; font-size: 14px;"></p>
-    <hr style="border: 0.5px solid #eee;">
-
-    <div style="text-align: left; display: inline-block; width: 100%; max-width: 250px; margin: 0 auto;">
-        <p style="margin: 5px 0;"><b>ลูกค้า:</b> <span id="billCustomer"></span></p>
-        <p style="margin: 5px 0;"><b>สินค้า:</b> <span id="billProduct"></span></p>
-        <p style="margin: 5px 0;"><b id="billLabelType">จำนวน:</b> <span id="billflowerQuantity"></span></p>
-        <p style="margin: 5px 0;"><b>ยอดเงิน:</b> <span id="billAmount"></span> บาท</p>
-    </div>
-
-   <div style="margin: 15px 0;">
-    <p style="font-size: 12px; color: #555; margin-bottom: 5px;">สแกนเพื่อชำระเงิน</p>
-    <img src="qr.png"
-         alt="QR Code" 
-         style="width: 150px; height: auto; border: 1px solid #eee; padding: 5px; border-radius: 8px;">
-</div>
-
-    <hr style="border: 0.5px solid #eee;">
-    <p style="font-size:12px;color:#888; text-align:center;">ขอบคุณที่อุดหนุน 💐</p>
-  </div>
-</div>
-
 <div class="card">
   <h3>ประวัติค่าใช้จ่าย</h3>
   <table id="costTable"></table>
@@ -263,10 +230,9 @@ function addSale(){
     date: today()
   });
 
-  // ล้างค่า
   customerName.value="";
   saleAmount.value="";
-  updateInput(); // รีเซ็ตช่องตามประเภทสินค้า
+  updateInput();
   save();
 }
 
@@ -286,13 +252,17 @@ function addCost(){
 }
 
 function delSale(i){
-  sales.splice(i,1);
-  save();
+  if(confirm("ยืนยันการลบรายการขายนี้?")) {
+    sales.splice(i,1);
+    save();
+  }
 }
 
 function delCost(i){
-  costs.splice(i,1);
-  save();
+  if(confirm("ยืนยันการลบค่าใช้จ่ายนี้?")) {
+    costs.splice(i,1);
+    save();
+  }
 }
 
 function render(){
@@ -303,7 +273,6 @@ function render(){
   totalCost.textContent = costTotal.toLocaleString();
   profit.textContent = (saleTotal - costTotal).toLocaleString();
 
-  // ปรับการเรียงลำดับ: ใช้ slice().reverse() เพื่อกลับด้านอาร์เรย์ก่อนแสดงผล
   saleTable.innerHTML = `
     <tr>
       <th>วันที่</th>
@@ -313,7 +282,6 @@ function render(){
       <th>จัดการ</th>
     </tr>
     ${sales.slice().reverse().map((s, index) => {
-      // หา index จริงในอาร์เรย์หลัก (sales) เพื่อให้ปุ่มลบทำงานถูกต้อง
       const actualIndex = sales.length - 1 - index;
       return `
       <tr>
@@ -323,7 +291,6 @@ function render(){
         <td>${s.amount.toLocaleString()}</td>
         <td>
           <button class="delete" onclick="delSale(${actualIndex})">ลบ</button>
-          <button style="width:auto; padding:5px 10px; margin:0;" onclick="showBill(${actualIndex})">🧾</button>
         </td>
       </tr>`;
     }).join("")}
@@ -332,7 +299,6 @@ function render(){
   costTable.innerHTML = `
     <tr><th>วันที่</th><th>รายการ</th><th>ยอด</th><th></th></tr>
     ${costs.slice().reverse().map((c, index) => {
-      // หา index จริงในอาร์เรย์หลัก (costs)
       const actualIndex = costs.length - 1 - index;
       return `
       <tr>
@@ -343,23 +309,6 @@ function render(){
       </tr>`;
     }).join("")}
   `;
-}
-
-function showBill(i){
-  let s = sales[i];
-  document.getElementById("billSection").style.display="block";
-
-  // สลับคำในใบเสร็จ
-  const billLabelType = document.getElementById("billLabelType");
-  billLabelType.innerText = (s.product === "กำไล") ? "ของตกแต่ง:" : "จำนวน:";
-
-  document.getElementById("billDate").textContent = "วันที่: " + s.date;
-  document.getElementById("billCustomer").textContent = s.customer;
-  document.getElementById("billProduct").textContent = s.product;
-  document.getElementById("billflowerQuantity").textContent = s.quantity;
-  document.getElementById("billAmount").textContent = s.amount.toLocaleString();
-
-  window.scrollTo({top: document.getElementById("billSection").offsetTop, behavior:"smooth"});
 }
 
 render();
