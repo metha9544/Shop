@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Flower Shop Manager</title>
+<title>Flower Shop Manager - METIST</title>
 
 <style>
 :root{
@@ -25,6 +25,13 @@ body{
 h1{
   text-align:center;
   color:#c06c9b;
+  margin-bottom: 5px;
+}
+.subtitle{
+  font-size:14px;
+  color:#b08968;
+  text-align:center;
+  margin-bottom: 20px;
 }
 
 .card{
@@ -48,6 +55,7 @@ input, select{
   border-radius:12px;
   border:1px solid #ddd;
   font-size:16px;
+  box-sizing: border-box;
 }
 
 button{
@@ -59,6 +67,7 @@ button{
   font-size:16px;
   background:var(--pink);
   cursor:pointer;
+  font-weight: bold;
 }
 
 button.cost{
@@ -68,7 +77,9 @@ button.cost{
 button.delete{
   background:#ffd6d6;
   padding:6px;
-  font-size:14px;
+  font-size:12px;
+  width: auto;
+  margin-top: 0;
 }
 
 .summary{
@@ -97,6 +108,7 @@ th,td{
   padding:8px;
   text-align:center;
   font-size:14px;
+  border-bottom: 1px solid #eee;
 }
 
 th{
@@ -109,18 +121,22 @@ th{
 <body>
 
 <h1>🌸 METIST ✨</h1>
+<div class="subtitle">FLOWER & LUCK</div>
 
 <div class="card">
   <h3>บันทึกการขาย</h3>
 
   <label>ชื่อลูกค้า</label>
-  <input type="text" id="customerName" placeholder="เช่น คุณเมย์">
+  <input type="text" id="customerName" placeholder="กรอกชื่อลูกค้า">
 
   <label>สินค้า</label>
-  <select id="product">
+  <select id="product" onchange="updateInput()">
     <option value="ดอกไม้">ดอกไม้</option>
     <option value="กำไล">กำไล</option>
   </select>
+
+  <label id="labelDynamic">จำนวนดอก</label>
+  <input type="text" id="flowerQuantity" placeholder="ใส่จำนวนดอก" value="">
 
   <label>ยอดขาย (บาท)</label>
   <input type="number" id="saleAmount">
@@ -160,8 +176,7 @@ th{
 </div>
 
 <div class="card" id="billSection" style="display:none">
-  <h3>🧾 ใบเสร็จ</h3>
-
+  <h3>ใบเสร็จ</h3>
   <div id="bill" style="
     background:#fff;
     padding:20px;
@@ -169,30 +184,57 @@ th{
     border:2px dashed #f3b6d4;
     text-align:center;
   ">
-    <h2 style="color:#c06c9b;margin:0">🌸 Flower Shop</h2>
-    <p id="billDate"></p>
-    <hr>
+    <h2 style="color:#c06c9b; margin:0; text-align:center;">🌸 METIST ✨</h2>
+    <p class="subtitle" style="text-align:center; margin-bottom: 10px;">FLOWER & LUCK</p>
+    <p id="billDate" style="text-align:center; font-size: 14px;"></p>
+    <hr style="border: 0.5px solid #eee;">
 
-    <p><b>ลูกค้า:</b> <span id="billCustomer"></span></p>
-    <p><b>สินค้า:</b> <span id="billProduct"></span></p>
-    <p><b>ยอดเงิน:</b> <span id="billAmount"></span> บาท</p>
+    <div style="text-align: left; display: inline-block; width: 100%; max-width: 250px; margin: 0 auto;">
+        <p style="margin: 5px 0;"><b>ลูกค้า:</b> <span id="billCustomer"></span></p>
+        <p style="margin: 5px 0;"><b>สินค้า:</b> <span id="billProduct"></span></p>
+        <p style="margin: 5px 0;"><b id="billLabelType">จำนวน:</b> <span id="billflowerQuantity"></span></p>
+        <p style="margin: 5px 0;"><b>ยอดเงิน:</b> <span id="billAmount"></span> บาท</p>
+    </div>
 
-    <hr>
-    <p style="font-size:12px;color:#888">ขอบคุณที่อุดหนุน 💐</p>
-  </div>
-
-  <button onclick="saveBillImage()">บันทึกบิลเป็นรูปภาพ</button>
+   <div style="margin: 15px 0;">
+    <p style="font-size: 12px; color: #555; margin-bottom: 5px;">สแกนเพื่อชำระเงิน</p>
+    <img src="qr.png"
+         alt="QR Code" 
+         style="width: 150px; height: auto; border: 1px solid #eee; padding: 5px; border-radius: 8px;">
 </div>
 
-<canvas id="billCanvas" style="display:none"></canvas>
+    <hr style="border: 0.5px solid #eee;">
+    <p style="font-size:12px;color:#888; text-align:center;">ขอบคุณที่อุดหนุน 💐</p>
+  </div>
+</div>
+
 <div class="card">
-  <h3>ค่าใช้จ่าย</h3>
+  <h3>ประวัติค่าใช้จ่าย</h3>
   <table id="costTable"></table>
 </div>
 
 <script>
 let sales = JSON.parse(localStorage.getItem("sales")) || [];
 let costs = JSON.parse(localStorage.getItem("costs")) || [];
+
+// ฟังก์ชันสลับ Label
+function updateInput() {
+  const productType = document.getElementById("product").value;
+  const label = document.getElementById("labelDynamic");
+  const input = document.getElementById("flowerQuantity");
+
+  if (productType === "กำไล") {
+    label.innerText = "ของตกแต่ง";
+    input.placeholder = "เช่น จี้หัวใจ, มุก";
+    input.type = "text";
+    input.value = "";
+  } else {
+    label.innerText = "จำนวนดอก";
+    input.placeholder = "ใส่จำนวนดอก";
+    input.type = "number";
+    input.value = "1";
+  }
+}
 
 function save(){
   localStorage.setItem("sales",JSON.stringify(sales));
@@ -206,17 +248,25 @@ function today(){
 
 function addSale(){
   let amount = Number(saleAmount.value);
-  if(!amount) return;
+  let detail = flowerQuantity.value || (product.value === "ดอกไม้" ? "1" : "-"); 
+  
+  if(!amount) {
+      alert("กรุณากรอกยอดขาย");
+      return;
+  }
 
   sales.push({
     customer: customerName.value || "-",
     product: product.value,
-    amount,
+    quantity: detail,
+    amount: amount,
     date: today()
   });
 
+  // ล้างค่า
   customerName.value="";
   saleAmount.value="";
+  updateInput(); // รีเซ็ตช่องตามประเภทสินค้า
   save();
 }
 
@@ -257,20 +307,20 @@ function render(){
     <tr>
       <th>วันที่</th>
       <th>ลูกค้า</th>
-      <th>สินค้า</th>
+      <th>สินค้า (รายละเอียด)</th>
       <th>ยอด</th>
-      <th></th>
+      <th>จัดการ</th>
     </tr>
     ${sales.map((s,i)=>`
       <tr>
         <td>${s.date}</td>
         <td>${s.customer}</td>
-        <td>${s.product}</td>
-        <td>${s.amount}</td>
-       <td>
-  <button class="delete" onclick="delSale(${i})">ลบ</button>
-  <button onclick="showBill(${i})">🧾</button>
-</td>
+        <td>${s.product} (${s.quantity})</td>
+        <td>${s.amount.toLocaleString()}</td>
+        <td>
+          <button class="delete" onclick="delSale(${i})">ลบ</button>
+          <button style="width:auto; padding:5px 10px; margin:0;" onclick="showBill(${i})">🧾</button>
+        </td>
       </tr>`).join("")}
   `;
 
@@ -280,52 +330,30 @@ function render(){
       <tr>
         <td>${c.date}</td>
         <td>${c.name}</td>
-        <td>${c.amount}</td>
+        <td>${c.amount.toLocaleString()}</td>
         <td><button class="delete" onclick="delCost(${i})">ลบ</button></td>
       </tr>`).join("")}
   `;
 }
 
-render();
 function showBill(i){
   let s = sales[i];
   document.getElementById("billSection").style.display="block";
 
-  billDate.textContent = "วันที่: " + s.date;
-  billCustomer.textContent = s.customer;
-  billProduct.textContent = s.product;
-  billAmount.textContent = s.amount.toLocaleString();
+  // สลับคำในใบเสร็จ
+  const billLabelType = document.getElementById("billLabelType");
+  billLabelType.innerText = (s.product === "กำไล") ? "ของตกแต่ง:" : "จำนวน:";
 
-  window.scrollTo({top:document.body.scrollHeight,behavior:"smooth"});
+  document.getElementById("billDate").textContent = "วันที่: " + s.date;
+  document.getElementById("billCustomer").textContent = s.customer;
+  document.getElementById("billProduct").textContent = s.product;
+  document.getElementById("billflowerQuantity").textContent = s.quantity;
+  document.getElementById("billAmount").textContent = s.amount.toLocaleString();
+
+  window.scrollTo({top: document.getElementById("billSection").offsetTop, behavior:"smooth"});
 }
 
-function saveBillImage(){
-  let bill = document.getElementById("bill");
-  let canvas = document.getElementById("billCanvas");
-  let ctx = canvas.getContext("2d");
-
-  let scale = 2;
-  canvas.width = bill.offsetWidth * scale;
-  canvas.height = bill.offsetHeight * scale;
-  ctx.scale(scale, scale);
-
-  ctx.fillStyle = "#fff";
-  ctx.fillRect(0,0,canvas.width,canvas.height);
-
-  ctx.font = "16px sans-serif";
-  ctx.fillStyle = "#444";
-
-  let y = 30;
-  bill.querySelectorAll("h2,p").forEach(el=>{
-    ctx.fillText(el.innerText,20,y);
-    y += 30;
-  });
-
-  let link = document.createElement("a");
-  link.download = "bill.png";
-  link.href = canvas.toDataURL("image/png");
-  link.click();
-}
+render();
 </script>
 
 </body>
