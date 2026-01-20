@@ -303,6 +303,7 @@ function render(){
   totalCost.textContent = costTotal.toLocaleString();
   profit.textContent = (saleTotal - costTotal).toLocaleString();
 
+  // ปรับการเรียงลำดับ: ใช้ slice().reverse() เพื่อกลับด้านอาร์เรย์ก่อนแสดงผล
   saleTable.innerHTML = `
     <tr>
       <th>วันที่</th>
@@ -311,28 +312,36 @@ function render(){
       <th>ยอด</th>
       <th>จัดการ</th>
     </tr>
-    ${sales.map((s,i)=>`
+    ${sales.slice().reverse().map((s, index) => {
+      // หา index จริงในอาร์เรย์หลัก (sales) เพื่อให้ปุ่มลบทำงานถูกต้อง
+      const actualIndex = sales.length - 1 - index;
+      return `
       <tr>
         <td>${s.date}</td>
         <td>${s.customer}</td>
         <td>${s.product} (${s.quantity})</td>
         <td>${s.amount.toLocaleString()}</td>
         <td>
-          <button class="delete" onclick="delSale(${i})">ลบ</button>
-          <button style="width:auto; padding:5px 10px; margin:0;" onclick="showBill(${i})">🧾</button>
+          <button class="delete" onclick="delSale(${actualIndex})">ลบ</button>
+          <button style="width:auto; padding:5px 10px; margin:0;" onclick="showBill(${actualIndex})">🧾</button>
         </td>
-      </tr>`).join("")}
+      </tr>`;
+    }).join("")}
   `;
 
   costTable.innerHTML = `
     <tr><th>วันที่</th><th>รายการ</th><th>ยอด</th><th></th></tr>
-    ${costs.map((c,i)=>`
+    ${costs.slice().reverse().map((c, index) => {
+      // หา index จริงในอาร์เรย์หลัก (costs)
+      const actualIndex = costs.length - 1 - index;
+      return `
       <tr>
         <td>${c.date}</td>
         <td>${c.name}</td>
         <td>${c.amount.toLocaleString()}</td>
-        <td><button class="delete" onclick="delCost(${i})">ลบ</button></td>
-      </tr>`).join("")}
+        <td><button class="delete" onclick="delCost(${actualIndex})">ลบ</button></td>
+      </tr>`;
+    }).join("")}
   `;
 }
 
