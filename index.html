@@ -112,6 +112,10 @@ th{
 
 <div class="card">
   <h3>บันทึกการขาย</h3>
+
+  <label>ชื่อลูกค้า</label>
+  <input type="text" id="customerName" placeholder="เช่น คุณเมย์">
+
   <label>สินค้า</label>
   <select id="product">
     <option value="ดอกไม้">ดอกไม้</option>
@@ -155,6 +159,32 @@ th{
   <table id="saleTable"></table>
 </div>
 
+<div class="card" id="billSection" style="display:none">
+  <h3>🧾 ใบเสร็จ</h3>
+
+  <div id="bill" style="
+    background:#fff;
+    padding:20px;
+    border-radius:16px;
+    border:2px dashed #f3b6d4;
+    text-align:center;
+  ">
+    <h2 style="color:#c06c9b;margin:0">🌸 Flower Shop</h2>
+    <p id="billDate"></p>
+    <hr>
+
+    <p><b>ลูกค้า:</b> <span id="billCustomer"></span></p>
+    <p><b>สินค้า:</b> <span id="billProduct"></span></p>
+    <p><b>ยอดเงิน:</b> <span id="billAmount"></span> บาท</p>
+
+    <hr>
+    <p style="font-size:12px;color:#888">ขอบคุณที่อุดหนุน 💐</p>
+  </div>
+
+  <button onclick="saveBillImage()">บันทึกบิลเป็นรูปภาพ</button>
+</div>
+
+<canvas id="billCanvas" style="display:none"></canvas>
 <div class="card">
   <h3>ค่าใช้จ่าย</h3>
   <table id="costTable"></table>
@@ -177,11 +207,15 @@ function today(){
 function addSale(){
   let amount = Number(saleAmount.value);
   if(!amount) return;
+
   sales.push({
-    product:product.value,
+    customer: customerName.value || "-",
+    product: product.value,
     amount,
-    date:today()
+    date: today()
   });
+
+  customerName.value="";
   saleAmount.value="";
   save();
 }
@@ -189,11 +223,13 @@ function addSale(){
 function addCost(){
   let amount = Number(costAmount.value);
   if(!amount) return;
+
   costs.push({
-    name:costName.value || "ค่าใช้จ่าย",
+    name: costName.value || "ค่าใช้จ่าย",
     amount,
-    date:today()
+    date: today()
   });
+
   costName.value="";
   costAmount.value="";
   save();
@@ -218,13 +254,23 @@ function render(){
   profit.textContent = (saleTotal - costTotal).toLocaleString();
 
   saleTable.innerHTML = `
-    <tr><th>วันที่</th><th>สินค้า</th><th>ยอด</th><th></th></tr>
+    <tr>
+      <th>วันที่</th>
+      <th>ลูกค้า</th>
+      <th>สินค้า</th>
+      <th>ยอด</th>
+      <th></th>
+    </tr>
     ${sales.map((s,i)=>`
       <tr>
         <td>${s.date}</td>
+        <td>${s.customer}</td>
         <td>${s.product}</td>
         <td>${s.amount}</td>
-        <td><button class="delete" onclick="delSale(${i})">ลบ</button></td>
+       <td>
+  <button class="delete" onclick="delSale(${i})">ลบ</button>
+  <button onclick="showBill(${i})">🧾</button>
+</td>
       </tr>`).join("")}
   `;
 
@@ -241,6 +287,45 @@ function render(){
 }
 
 render();
+function showBill(i){
+  let s = sales[i];
+  document.getElementById("billSection").style.display="block";
+
+  billDate.textContent = "วันที่: " + s.date;
+  billCustomer.textContent = s.customer;
+  billProduct.textContent = s.product;
+  billAmount.textContent = s.amount.toLocaleString();
+
+  window.scrollTo({top:document.body.scrollHeight,behavior:"smooth"});
+}
+
+function saveBillImage(){
+  let bill = document.getElementById("bill");
+  let canvas = document.getElementById("billCanvas");
+  let ctx = canvas.getContext("2d");
+
+  let scale = 2;
+  canvas.width = bill.offsetWidth * scale;
+  canvas.height = bill.offsetHeight * scale;
+  ctx.scale(scale, scale);
+
+  ctx.fillStyle = "#fff";
+  ctx.fillRect(0,0,canvas.width,canvas.height);
+
+  ctx.font = "16px sans-serif";
+  ctx.fillStyle = "#444";
+
+  let y = 30;
+  bill.querySelectorAll("h2,p").forEach(el=>{
+    ctx.fillText(el.innerText,20,y);
+    y += 30;
+  });
+
+  let link = document.createElement("a");
+  link.download = "bill.png";
+  link.href = canvas.toDataURL("image/png");
+  link.click();
+}
 </script>
 
 </body>
