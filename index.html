@@ -4,12 +4,13 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>METIST - Flower & Luck</title>
+    
     <link rel="apple-touch-icon" href="logo.png">
+    <link rel="icon" type="image/png" href="logo.png">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="default">
+    <meta name="apple-mobile-web-app-title" content="METIST">
 
-<link rel="icon" type="image/png" href="logo.png">
-
-<meta name="apple-mobile-web-app-capable" content="yes">
-<meta name="apple-mobile-web-app-status-bar-style" content="default">
     <style>
         :root {
             --pink: #f8c8dc;
@@ -245,6 +246,17 @@
         <div class="split-box"><span>ยอดขายดอกไม้</span><div id="stat-flower-sale">0</div></div>
         <div class="split-box"><span>ยอดขายกำไล</span><div id="stat-bracelet-sale">0</div></div>
     </div>
+
+    <div class="card" style="border: 2px solid var(--pink); background: #fff5f8;">
+        <h3>💾 จัดการข้อมูล (Backup)</h3>
+        <div style="display: flex; gap: 10px;">
+            <button onclick="exportData()" style="flex: 1; background: #51cf66; color: white; padding: 12px; border: none; border-radius: 12px; font-weight: bold; cursor: pointer;">ดาวน์โหลดสำรอง</button>
+            <button onclick="document.getElementById('importFile').click()" style="flex: 1; background: #fab005; color: white; padding: 12px; border: none; border-radius: 12px; font-weight: bold; cursor: pointer;">นำเข้าข้อมูลเดิม</button>
+        </div>
+        <input type="file" id="importFile" style="display:none" accept=".json" onchange="importData(event)">
+        <p style="font-size: 10px; color: gray; margin-top: 10px;">*แนะนำให้ดาวน์โหลดเก็บไว้ทุกสัปดาห์กันเหนียวครับ</p>
+    </div>
+
     <div class="card">
         <h3>บันทึกค่าใช้จ่าย / ต้นทุน</h3>
         <input type="text" id="cost-desc" placeholder="รายละเอียดค่าใช้จ่าย">
@@ -279,21 +291,17 @@
 
 <script>
     // --- 1. ส่วนดึงข้อมูลจากแอปเก่า (Migration Logic) ---
-    // ส่วนนี้จะทำงานครั้งเดียวเพื่อย้ายข้อมูลจากชื่อเดิมมายังชื่อใหม่
     (function migrateData() {
-        // ดึงข้อมูลออเดอร์ (จาก metist เดิม ไป metist_orders ใหม่)
         let oldOrderData = localStorage.getItem("metist");
         let currentNewOrders = localStorage.getItem("metist_orders");
         if (oldOrderData && !currentNewOrders) {
             localStorage.setItem("metist_orders", oldOrderData);
         }
 
-        // ดึงข้อมูลค่าใช้จ่าย (จาก costs เดิม ไป metist_costs ใหม่)
         let oldCostData = localStorage.getItem("costs");
         let currentNewCosts = localStorage.getItem("metist_costs");
         if (oldCostData && !currentNewCosts) {
             let parsedCosts = JSON.parse(oldCostData);
-            // ปรับโครงสร้างให้ตรงกับแอปใหม่ (เปลี่ยน name เป็น desc)
             let formattedCosts = parsedCosts.map(c => ({
                 desc: c.name || "ค่าใช้จ่ายเก่า",
                 amount: c.amount,
@@ -303,7 +311,7 @@
         }
     })();
 
-    // --- 2. ตั้งค่าตัวแปรหลัก (ดึงจากชื่อใหม่ที่ย้ายมาแล้ว) ---
+    // --- 2. ตั้งค่าตัวแปรหลัก ---
     let orders = JSON.parse(localStorage.getItem("metist_orders") || "[]");
     let costs = JSON.parse(localStorage.getItem("metist_costs") || "[]");
 
@@ -328,7 +336,41 @@
         basePrice: 59
     };
 
-    // --- 3. ฟังก์ชันการทำงานต่างๆ (คงเดิมตามโค้ดคุณ) ---
+    // --- 3. ฟังก์ชันระบบสำรองข้อมูล (Backup & Import) ---
+    function exportData() {
+        const data = {
+            orders: JSON.parse(localStorage.getItem("metist_orders") || "[]"),
+            costs: JSON.parse(localStorage.getItem("metist_costs") || "[]")
+        };
+        const blob = new Blob([JSON.stringify(data)], { type: "application/json" });
+        const url = URL.createObjectURL(blob);
+        const a = document.createElement("a");
+        a.href = url;
+        a.download = `METIST_Backup_${new Date().toLocaleDateString('th-TH')}.json`;
+        a.click();
+    }
+
+    function importData(event) {
+        const file = event.target.files[0];
+        if (!file) return;
+        const reader = new FileReader();
+        reader.onload = function(e) {
+            try {
+                const data = JSON.parse(e.target.result);
+                if (confirm("คุณต้องการนำเข้าข้อมูลนี้ใช่หรือไม่? ข้อมูลปัจจุบันจะถูกเขียนทับ")) {
+                    localStorage.setItem("metist_orders", JSON.stringify(data.orders || []));
+                    localStorage.setItem("metist_costs", JSON.stringify(data.costs || []));
+                    alert("นำเข้าข้อมูลสำเร็จ!");
+                    location.reload();
+                }
+            } catch (err) {
+                alert("ไฟล์ไม่ถูกต้อง กรุณาใช้ไฟล์ที่ดาวน์โหลดจากระบบเท่านั้น");
+            }
+        };
+        reader.readAsText(file);
+    }
+
+    // --- 4. ฟังก์ชันการทำงานต่างๆ ---
     function switchPage(pageId) {
         document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
         document.querySelectorAll('.nav-menu button').forEach(b => b.classList.remove('active'));
@@ -336,6 +378,8 @@
         document.getElementById('btn-' + pageId).classList.add('active');
         if(pageId === 'summary') renderSummary();
     }
+
+    const cleanPrice = (val) => typeof val === 'number' ? val : parseFloat(String(val).replace(/[^0-9.]/g, '')) || 0;
 
     function renderFlowers() {
         const flowerList = ["แดง", "ขาว", "ชมพู", "น้ำเงิน", "ม่วง"];
@@ -441,10 +485,13 @@
         document.getElementById("pending-count").innerText = `(รอดำเนินการ: ${orders.filter(o => !o.status).length})`;
         listDiv.innerHTML = [...orders].reverse().map((o, idx) => {
             const realIdx = orders.length - 1 - idx;
+            const displayType = o.type ? o.type : "ออเดอร์เดิม";
+            const displayTotal = cleanPrice(o.total);
+            
             return `
                 <div class="order-item">
-                    <b>👤 ลูกค้า: ${o.name} (${o.type})</b><br>
-                    <div style="margin: 5px 0; font-weight:bold;">ยอดรวม: ${o.total} บาท</div>
+                    <b>👤 ลูกค้า: ${o.name} (${displayType})</b><br>
+                    <div style="margin: 5px 0; font-weight:bold;">ยอดรวม: ${displayTotal.toLocaleString()} บาท</div>
                     <div class="btn-group">
                         <button class="status-btn" style="background:${o.status?'#51cf66':'#ff6b6b'}" onclick="toggleStatus(${realIdx})">${o.status?'✅ เตรียมแล้ว':'⏳ รอดำเนินการ'}</button>
                         <button class="status-btn" style="background:${o.paid?'#51cf66':'#ff6b6b'}" onclick="togglePaid(${realIdx})">${o.paid?'💳 จ่ายแล้ว':'❌ ยังไม่ได้ชำระ'}</button>
@@ -460,27 +507,15 @@
         try {
             const o = orders[i];
             const isReceipt = mode === 'receipt';
-            const emo = {
-                user: isReceipt ? "" : "👤 ",
-                flower: isReceipt ? "" : "🌹 ",
-                stone: isReceipt ? "" : "🔮 ",
-                paper: isReceipt ? "" : "📦 ",
-                bow: isReceipt ? "" : "🎀 ",
-                extra: isReceipt ? "" : "✨ ",
-                chain: isReceipt ? "" : "⛓️ ",
-                lock: isReceipt ? "" : "🔒 "
-            };
+            const emo = { user: isReceipt ? "" : "👤 ", flower: isReceipt ? "" : "🌹 ", stone: isReceipt ? "" : "🔮 ", paper: isReceipt ? "" : "📦 ", bow: isReceipt ? "" : "🎀 ", extra: isReceipt ? "" : "✨ ", chain: isReceipt ? "" : "⛓️ ", lock: isReceipt ? "" : "🔒 " };
 
             let bodyHtml = `<b>${emo.user}ลูกค้า:</b> ${o.name}<br>`;
-            
             if (o.type === 'ดอกไม้') {
                 let flowerTxt = [];
                 if (o.details?.flowers) {
                     for (let t in o.details.flowers) {
                         for (let c in o.details.flowers[t]) {
-                            if (o.details.flowers[t][c] > 0) {
-                                flowerTxt.push(`${c}${t === 'กริตเตอร์' ? '(กริต)' : ''} x${o.details.flowers[t][c]}`);
-                            }
+                            if (o.details.flowers[t][c] > 0) flowerTxt.push(`${c}${t === 'กริตเตอร์' ? '(กริต)' : ''} x${o.details.flowers[t][c]}`);
                         }
                     }
                 }
@@ -501,29 +536,30 @@
                              <b>${emo.extra}ของตกแต่ง:</b> ${o.details?.accessories?.length > 0 ? o.details.accessories.join(", ") : "-"}`;
             }
 
-            bodyHtml += `<br><br><b style="font-size:1.1rem; color:var(--pink-dark)">ยอดรวม: ${o.total} บาท</b>`;
+            bodyHtml += `<br><br><b style="font-size:1.1rem; color:var(--pink-dark)">ยอดรวม: ${cleanPrice(o.total).toLocaleString()} บาท</b>`;
             
             document.getElementById("rc-date").innerText = "วันที่: " + o.date;
             document.getElementById("modal-body").innerHTML = bodyHtml;
             document.getElementById("receipt-extras").style.display = isReceipt ? "block" : "none";
             document.getElementById("receiptModal").style.display = "block";
-        } catch(e) { 
-            console.error(e);
-            alert("ไม่สามารถแสดงผลได้"); 
-        }
+        } catch(e) { alert("ไม่สามารถแสดงผลได้"); }
     }
 
     function renderSummary() {
-        const totalSale = orders.reduce((s, o) => s + o.total, 0);
-        const flowerSale = orders.filter(o => o.type === 'ดอกไม้').reduce((s, o) => s + o.total, 0);
-        const braceletSale = orders.filter(o => o.type === 'กำไล').reduce((s, o) => s + o.total, 0);
-        const totalCost = costs.reduce((s, c) => s + Number(c.amount), 0);
+        const totalSale = orders.reduce((s, o) => s + cleanPrice(o.total), 0);
+        const flowerSale = orders.filter(o => o.type === 'ดอกไม้' || !o.type).reduce((s, o) => s + cleanPrice(o.total), 0);
+        const braceletSale = orders.filter(o => o.type === 'กำไล').reduce((s, o) => s + cleanPrice(o.total), 0);
+        const totalCost = costs.reduce((s, c) => s + (Number(c.amount) || 0), 0);
+
         document.getElementById("stat-sale").innerText = totalSale.toLocaleString();
         document.getElementById("stat-flower-sale").innerText = flowerSale.toLocaleString();
         document.getElementById("stat-bracelet-sale").innerText = braceletSale.toLocaleString();
         document.getElementById("stat-cost").innerText = totalCost.toLocaleString();
         document.getElementById("stat-profit").innerText = (totalSale - totalCost).toLocaleString();
-        document.getElementById("cost-history-body").innerHTML = [...costs].reverse().map((c, i) => `<tr><td>${c.date}</td><td>${c.desc}</td><td>${Number(c.amount)}</td><td><button onclick="deleteCost(${costs.length-1-i})" style="border:none; background:none; color:red;">ลบ</button></td></tr>`).join("");
+        
+        document.getElementById("cost-history-body").innerHTML = [...costs].reverse().map((c, i) => 
+            `<tr><td>${c.date}</td><td>${c.desc}</td><td>${Number(c.amount).toLocaleString()}</td><td><button onclick="deleteCost(${costs.length-1-i})" style="border:none; background:none; color:red;">ลบ</button></td></tr>`
+        ).join("");
     }
 
     function addCost() {
@@ -537,12 +573,9 @@
     }
 
     function renderOptions() {
-        document.getElementById("paper-grid").innerHTML = ["ดำ", "ขาว", "ชมพู", "แดง"].map(c => `
-            <button class="square-btn" style="background:${colors[c]}; color:${c==='ขาว'?'#5a3d45':'#fff'}" onclick="selectedPaper='${c}'; document.getElementById('paperChoice').innerText='เลือก: ${c}'">${c}</button>`).join("");
-        document.getElementById("bow-grid").innerHTML = ["แดง", "ขาว", "ชมพู", "น้ำเงิน", "ม่วง", "ชมพูแก้ว", "แดงแก้ว"].map(c => `
-            <button class="square-btn" style="background:${colors[c]}; color:${c==='ขาว'?'#5a3d45':'#fff'}" onclick="selectedBow='${c}'; document.getElementById('bowChoice').innerText='เลือก: ${c}'">${c}</button>`).join("");
-        document.getElementById("extra-grid").innerHTML = Object.keys(extraPrice).map(e => `
-            <button class="square-btn" style="background:#f2b5d4; color:#5a3d45;" onclick="selectedExtras['${e}']=(selectedExtras['${e}']||0)+1; calcTotal()">${e} +${extraPrice[e]}</button>`).join("");
+        document.getElementById("paper-grid").innerHTML = ["ดำ", "ขาว", "ชมพู", "แดง"].map(c => `<button class="square-btn" style="background:${colors[c]}; color:${c==='ขาว'?'#5a3d45':'#fff'}" onclick="selectedPaper='${c}'; document.getElementById('paperChoice').innerText='เลือก: ${c}'">${c}</button>`).join("");
+        document.getElementById("bow-grid").innerHTML = ["แดง", "ขาว", "ชมพู", "น้ำเงิน", "ม่วง", "ชมพูแก้ว", "แดงแก้ว"].map(c => `<button class="square-btn" style="background:${colors[c]}; color:${c==='ขาว'?'#5a3d45':'#fff'}" onclick="selectedBow='${c}'; document.getElementById('bowChoice').innerText='เลือก: ${c}'">${c}</button>`).join("");
+        document.getElementById("extra-grid").innerHTML = Object.keys(extraPrice).map(e => `<button class="square-btn" style="background:#f2b5d4; color:#5a3d45;" onclick="selectedExtras['${e}']=(selectedExtras['${e}']||0)+1; calcTotal()">${e} +${extraPrice[e]}</button>`).join("");
     }
 
     function toggleStatus(i) { orders[i].status = !orders[i].status; updateStore(); }
@@ -552,7 +585,6 @@
     function updateStore() { localStorage.setItem("metist_orders", JSON.stringify(orders)); renderOrderList(); }
     function closeModal() { document.getElementById("receiptModal").style.display = "none"; }
 
-    // เริ่มต้นทำงาน
     renderFlowers(); renderOptions(); renderOrderList();
 </script>
 
