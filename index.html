@@ -214,6 +214,11 @@
             </div>
         </div>
         <div id="chainChoice" style="margin-top:8px; font-size:12px; font-weight:bold; color:var(--pink-dark)">เลือกโซ่: -</div>
+        
+        <div style="margin-top:15px;">
+            <label style="font-size: 13px; font-weight: bold; color: var(--text);">ความยาวข้อมือ (cm):</label>
+            <input type="number" id="wrist-size" placeholder="กรอกความยาวข้อมือ" style="margin-top: 5px;">
+        </div>
     </div>
 
     <div class="card">
@@ -320,7 +325,8 @@
         lockPrice: 0, 
         chainPrice: 0, 
         accessories: [], 
-        basePrice: 59
+        basePrice: 59,
+        wristSize: "" // เพิ่มฟิลด์ขนาดข้อมือ
     };
 
     function exportData() {
@@ -428,16 +434,13 @@
     function calcBrTotal() {
         let total = brData.basePrice;
         
-        // 1. คำนวณราคาหิน
         let totalStones = Object.values(brData.stones).reduce((a, b) => a + b, 0);
         if (totalStones > 1) total += (totalStones - 1) * 30;
         
-        // 2. คำนวณราคาโซ่และตัวล็อค
         total += brData.lockPrice + brData.chainPrice;
         
-        // 3. คำนวณราคาของตกแต่ง (Accessories) แยกโควตา
-        let normalAccCount = 0; // จี้ดาว, จี้หัวใจ
-        let pearlCount = 0;     // ไข่มุก
+        let normalAccCount = 0; 
+        let pearlCount = 0;     
         
         brData.accessories.forEach(item => {
             if(item === 'ไข่มุก') {
@@ -447,9 +450,7 @@
             }
         });
 
-        // จี้ปกติ ฟรี 1 ชิ้นแรก
         if (normalAccCount > 1) total += (normalAccCount - 1) * 5;
-        // ไข่มุก ฟรี 1 ชิ้นแรกแยกต่างหาก
         if (pearlCount > 1) total += (pearlCount - 1) * 5;
         
         document.getElementById("br-summary-text").innerText = `ราคารวม: ${total} บาท`;
@@ -457,11 +458,12 @@
     }
 
     function resetBracelet() {
-        brData = { stones: {}, chain: "", lock: "", lockPrice: 0, chainPrice: 0, accessories: [], basePrice: 59 };
+        brData = { stones: {}, chain: "", lock: "", lockPrice: 0, chainPrice: 0, accessories: [], basePrice: 59, wristSize: "" };
         document.getElementById('stoneChoice').innerText = "เลือกหิน: -";
         document.getElementById('chainChoice').innerText = "เลือกโซ่: -";
         document.getElementById('lockChoice').innerText = "เลือกตัวล็อค: -";
         document.getElementById('accList').innerText = "รายการ: -";
+        document.getElementById('wrist-size').value = ""; // รีเซ็ตช่องความยาว
         calcBrTotal();
     }
 
@@ -474,6 +476,8 @@
         } else {
             name = document.getElementById("customer-br").value;
             total = calcBrTotal();
+            // ดึงค่าความยาวข้อมือ ณ ตอนกดบันทึก
+            brData.wristSize = document.getElementById('wrist-size').value;
             details = JSON.parse(JSON.stringify(brData));
         }
         if(!name) { alert("กรุณาใส่ชื่อลูกค้า"); return; }
@@ -506,11 +510,24 @@
                 </div>`;
         }).join("");
     }
-
     function openPopup(i, mode) {
         const o = orders[i];
         const isReceipt = mode === 'receipt';
-        let bodyHtml = `<b>ลูกค้า:</b> ${o.name}<br>`;
+        // กำหนดอิโมจิ (ใช้เฉพาะตอนไม่ใช่ใบเสร็จ)
+        const emoji = {
+            cust: isReceipt ? "" : "👤 ",
+            flower: isReceipt ? "" : "🌹 ",
+            paper: isReceipt ? "" : "📦 ",
+            bow: isReceipt ? "" : "🎀 ",
+            extra: isReceipt ? "" : "✨ ",
+            stone: isReceipt ? "" : "🔮 ",
+            wrist: isReceipt ? "" : "📏 ",
+            chain: isReceipt ? "" : "⛓️ ",
+            lock: isReceipt ? "" : "🔒 ",
+            acc: isReceipt ? "" : "✨ "
+        };
+
+        let bodyHtml = `<b>${emoji.cust}ลูกค้า:</b> ${o.name}<br>`;
         if (o.type === 'ดอกไม้') {
             let flowerTxt = [];
             if (o.details?.flowers) {
@@ -520,17 +537,18 @@
                     }
                 }
             }
-            bodyHtml += `<b>สีดอก:</b> ${flowerTxt.join(", ") || "-"}<br>
-                         <b>กระดาษ:</b> ${o.details?.paper || "-"}<br>
-                         <b>โบว์:</b> ${o.details?.bow || "-"}<br>
-                         <b>ของตกแต่ง:</b> ${o.details?.extras ? Object.entries(o.details.extras).filter(e => e[1] > 0).map(e => e[0] + '(' + e[1] + ')').join(", ") : "-"}`;
+            bodyHtml += `<b>${emoji.flower}สีดอก:</b> ${flowerTxt.join(", ") || "-"}<br>
+                         <b>${emoji.paper}กระดาษ:</b> ${o.details?.paper || "-"}<br>
+                         <b>${emoji.bow}โบว์:</b> ${o.details?.bow || "-"}<br>
+                         <b>${emoji.extra}ของตกแต่ง:</b> ${o.details?.extras ? Object.entries(o.details.extras).filter(e => e[1] > 0).map(e => e[0] + '(' + e[1] + ')').join(", ") : "-"}`;
         } else {
             let stoneTxt = [];
             for (let s in o.details?.stones) { if (o.details.stones[s] > 0) stoneTxt.push(`${s} x${o.details.stones[s]}`); }
-            bodyHtml += `<b>หิน:</b> ${stoneTxt.join(", ") || "-"}<br>
-                         <b>โซ่:</b> ${o.details?.chain || "-"}<br>
-                         <b>ตัวล็อค:</b> ${o.details?.lock || "-"}<br>
-                         <b>ของตกแต่ง:</b> ${o.details?.accessories?.join(", ") || "-"}`;
+            bodyHtml += `<b>${emoji.stone}หิน:</b> ${stoneTxt.join(", ") || "-"}<br>
+                         <b>${emoji.wrist}ข้อมือ:</b> ${o.details?.wristSize ? o.details.wristSize + ' cm' : "-"}<br>
+                         <b>${emoji.chain}โซ่:</b> ${o.details?.chain || "-"}<br>
+                         <b>${emoji.lock}ตัวล็อค:</b> ${o.details?.lock || "-"}<br>
+                         <b>${emoji.acc}ของตกแต่ง:</b> ${o.details?.accessories?.join(", ") || "-"}`;
         }
         bodyHtml += `<br><br><b style="font-size:1.1rem; color:var(--pink-dark)">ยอดรวม: ${cleanPrice(o.total).toLocaleString()} บาท</b>`;
         document.getElementById("rc-date").innerText = "วันที่: " + o.date;
@@ -538,7 +556,6 @@
         document.getElementById("receipt-extras").style.display = isReceipt ? "block" : "none";
         document.getElementById("receiptModal").style.display = "block";
     }
-
     function renderSummary() {
         const totalSale = orders.reduce((s, o) => s + cleanPrice(o.total), 0);
         const flowerSale = orders.filter(o => o.type === 'ดอกไม้' || !o.type).reduce((s, o) => s + cleanPrice(o.total), 0);
