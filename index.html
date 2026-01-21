@@ -53,7 +53,6 @@
         }
         h2 { font-size: 1.1rem; margin-top: 0; margin-bottom: 12px; }
         
-        /* ปรับ Font-size เป็น 16px เพื่อไม่ให้เบราว์เซอร์ซูมเวลาพิมพ์ */
         input { 
             width: 100%; 
             padding: 12px; 
@@ -132,15 +131,15 @@
     </div>
 
     <div class="card">
-        <h2>📦 กระดาษห่อ</h2>
+        <h2>📦 กระดาษห่อ (เลือกได้มากกว่าหนึ่ง)</h2>
         <div class="grid-options" id="paper-grid"></div>
-        <div id="paperChoice" style="margin-top:8px; font-size:12px; font-weight:bold; color:var(--pink-dark)"></div>
+        <div id="paperChoice" style="margin-top:8px; font-size:12px; font-weight:bold; color:var(--pink-dark)">เลือก: -</div>
     </div>
 
     <div class="card">
-        <h2>🎀 โบว์</h2>
+        <h2>🎀 โบว์ (เลือกได้มากกว่าหนึ่ง)</h2>
         <div class="grid-options" id="bow-grid"></div>
-        <div id="bowChoice" style="margin-top:8px; font-size:12px; font-weight:bold; color:var(--pink-dark)"></div>
+        <div id="bowChoice" style="margin-top:8px; font-size:12px; font-weight:bold; color:var(--pink-dark)">เลือก: -</div>
     </div>
 
     <div class="card">
@@ -228,13 +227,13 @@
 
     <div class="card">
         <h2>✨ ของตกแต่ง (Accessories)</h2>
-        <p style="font-size:10px; color:gray; margin-top:-10px;">*ฟรี 1 ชิ้นแรก ชิ้นถัดไป +5 บาท</p>
+        <p style="font-size:10px; color:gray; margin-top:-10px;">*จี้ฟรี 1 / ไข่มุกฟรี 1 (ชิ้นถัดไป +5)</p>
         <div class="grid-options">
             <button class="square-btn" style="background:#eee; color:#333;" onclick="addAccessory('จี้หัวใจเงิน')">หัวใจเงิน</button>
             <button class="square-btn" style="background:#fae1a5; color:#333;" onclick="addAccessory('จี้หัวใจทอง')">หัวใจทอง</button>
             <button class="square-btn" style="background:#eee; color:#333;" onclick="addAccessory('จี้ดาวเงิน')">ดาวเงิน</button>
             <button class="square-btn" style="background:#fae1a5; color:#333;" onclick="addAccessory('จี้ดาวทอง')">ดาวทอง</button>
-            <button class="square-btn" style="background:#fff; color:#333; border:1px solid #ddd;" onclick="addAccessory('ไข่มุก')">ไข่มุก</button>
+            <button class="square-btn" style="background:#fff; color:#333; border:1px solid #ddd;" onclick="addAccessory('ไข่มุก')">ไข่มุก2</button>
         </div>
         <div id="accList" style="margin-top:8px; font-size:11px; color:#888;">รายการ: -</div>
     </div>
@@ -264,7 +263,6 @@
             <button onclick="document.getElementById('importFile').click()" style="flex: 1; background: #fab005; color: white; padding: 12px; border: none; border-radius: 12px; font-weight: bold; cursor: pointer;">นำเข้าข้อมูลเดิม</button>
         </div>
         <input type="file" id="importFile" style="display:none" accept=".json" onchange="importData(event)">
-        <p style="font-size: 10px; color: gray; margin-top: 10px;">*แนะนำให้ดาวน์โหลดเก็บไว้ทุกสัปดาห์กันเหนียวครับ</p>
     </div>
 
     <div class="card">
@@ -300,28 +298,6 @@
 </div>
 
 <script>
-    // --- 1. ส่วนดึงข้อมูลจากแอปเก่า (Migration Logic) ---
-    (function migrateData() {
-        let oldOrderData = localStorage.getItem("metist");
-        let currentNewOrders = localStorage.getItem("metist_orders");
-        if (oldOrderData && !currentNewOrders) {
-            localStorage.setItem("metist_orders", oldOrderData);
-        }
-
-        let oldCostData = localStorage.getItem("costs");
-        let currentNewCosts = localStorage.getItem("metist_costs");
-        if (oldCostData && !currentNewCosts) {
-            let parsedCosts = JSON.parse(oldCostData);
-            let formattedCosts = parsedCosts.map(c => ({
-                desc: c.name || "ค่าใช้จ่ายเก่า",
-                amount: c.amount,
-                date: c.date || new Date().toLocaleDateString('th-TH')
-            }));
-            localStorage.setItem("metist_costs", JSON.stringify(formattedCosts));
-        }
-    })();
-
-    // --- 2. ตั้งค่าตัวแปรหลัก ---
     let orders = JSON.parse(localStorage.getItem("metist_orders") || "[]");
     let costs = JSON.parse(localStorage.getItem("metist_costs") || "[]");
 
@@ -330,10 +306,11 @@
         น้ำเงิน: "#457b9d", ม่วง: "#9b5de5", ดำ: "#333333", 
         ชมพูแก้ว: "#ff007f", แดงแก้ว: "#b91d1d" 
     };
-    const extraPrice = { ผีเสื้อ: 5, มงกุฎ: 10, ไฟLED: 25, ไข่มุก: 0, ลูกไม้: 0, การ์ด: 0 };
+    const extraPrice = { ผีเสื้อ: 5, มงกุฎ: 10, ไฟLED: 25, ไข่มุก: 0, ขอบลูกไม้: 0,ขอบมุก: 0, การ์ด: 0 };
 
     let currentFlowerData = { "พื้น": {}, "กริตเตอร์": {} };
-    let selectedPaper = "", selectedBow = "";
+    let selectedPapers = []; 
+    let selectedBows = []; 
     let selectedExtras = {};
 
     let brData = {
@@ -346,12 +323,8 @@
         basePrice: 59
     };
 
-    // --- 3. ฟังก์ชันระบบสำรองข้อมูล (Backup & Import) ---
     function exportData() {
-        const data = {
-            orders: JSON.parse(localStorage.getItem("metist_orders") || "[]"),
-            costs: JSON.parse(localStorage.getItem("metist_costs") || "[]")
-        };
+        const data = { orders, costs };
         const blob = new Blob([JSON.stringify(data)], { type: "application/json" });
         const url = URL.createObjectURL(blob);
         const a = document.createElement("a");
@@ -367,20 +340,16 @@
         reader.onload = function(e) {
             try {
                 const data = JSON.parse(e.target.result);
-                if (confirm("คุณต้องการนำเข้าข้อมูลนี้ใช่หรือไม่? ข้อมูลปัจจุบันจะถูกเขียนทับ")) {
+                if (confirm("นำเข้าข้อมูล? ข้อมูลเดิมจะหายไป")) {
                     localStorage.setItem("metist_orders", JSON.stringify(data.orders || []));
                     localStorage.setItem("metist_costs", JSON.stringify(data.costs || []));
-                    alert("นำเข้าข้อมูลสำเร็จ!");
                     location.reload();
                 }
-            } catch (err) {
-                alert("ไฟล์ไม่ถูกต้อง กรุณาใช้ไฟล์ที่ดาวน์โหลดจากระบบเท่านั้น");
-            }
+            } catch (err) { alert("ไฟล์ไม่ถูกต้อง"); }
         };
         reader.readAsText(file);
     }
 
-    // --- 4. ฟังก์ชันการทำงานต่างๆ ---
     function switchPage(pageId) {
         document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
         document.querySelectorAll('.nav-menu button').forEach(b => b.classList.remove('active'));
@@ -407,6 +376,16 @@
         calcTotal();
     }
 
+    function addPaper(c) {
+        selectedPapers.push(c);
+        document.getElementById('paperChoice').innerText = 'เลือก: ' + selectedPapers.join(", ");
+    }
+
+    function addBow(c) {
+        selectedBows.push(c);
+        document.getElementById('bowChoice').innerText = 'เลือก: ' + selectedBows.join(", ");
+    }
+
     function calcTotal() {
         let total = Number(document.getElementById("basePrice").value || 0);
         Object.keys(selectedExtras).forEach(e => total += (selectedExtras[e] * extraPrice[e]));
@@ -422,9 +401,7 @@
 
     function renderStoneList() {
         let selected = [];
-        for (let s in brData.stones) {
-            if (brData.stones[s] > 0) selected.push(`${s} x${brData.stones[s]}`);
-        }
+        for (let s in brData.stones) { if (brData.stones[s] > 0) selected.push(`${s} x${brData.stones[s]}`); }
         document.getElementById('stoneChoice').innerText = "เลือกหิน: " + (selected.join(", ") || "-");
     }
 
@@ -450,11 +427,31 @@
 
     function calcBrTotal() {
         let total = brData.basePrice;
+        
+        // 1. คำนวณราคาหิน
         let totalStones = Object.values(brData.stones).reduce((a, b) => a + b, 0);
         if (totalStones > 1) total += (totalStones - 1) * 30;
+        
+        // 2. คำนวณราคาโซ่และตัวล็อค
         total += brData.lockPrice + brData.chainPrice;
-        let accCount = brData.accessories.length;
-        if (accCount > 1) total += (accCount - 1) * 5;
+        
+        // 3. คำนวณราคาของตกแต่ง (Accessories) แยกโควตา
+        let normalAccCount = 0; // จี้ดาว, จี้หัวใจ
+        let pearlCount = 0;     // ไข่มุก
+        
+        brData.accessories.forEach(item => {
+            if(item === 'ไข่มุก') {
+                pearlCount++;
+            } else {
+                normalAccCount++;
+            }
+        });
+
+        // จี้ปกติ ฟรี 1 ชิ้นแรก
+        if (normalAccCount > 1) total += (normalAccCount - 1) * 5;
+        // ไข่มุก ฟรี 1 ชิ้นแรกแยกต่างหาก
+        if (pearlCount > 1) total += (pearlCount - 1) * 5;
+        
         document.getElementById("br-summary-text").innerText = `ราคารวม: ${total} บาท`;
         return total;
     }
@@ -473,7 +470,7 @@
         if(productType === 'ดอกไม้') {
             name = document.getElementById("customer").value;
             total = calcTotal();
-            details = { flowers: JSON.parse(JSON.stringify(currentFlowerData)), paper: selectedPaper, bow: selectedBow, extras: {...selectedExtras} };
+            details = { flowers: JSON.parse(JSON.stringify(currentFlowerData)), paper: selectedPapers.join(", "), bow: selectedBows.join(", "), extras: {...selectedExtras} };
         } else {
             name = document.getElementById("customer-br").value;
             total = calcBrTotal();
@@ -495,13 +492,10 @@
         document.getElementById("pending-count").innerText = `(รอดำเนินการ: ${orders.filter(o => !o.status).length})`;
         listDiv.innerHTML = [...orders].reverse().map((o, idx) => {
             const realIdx = orders.length - 1 - idx;
-            const displayType = o.type ? o.type : "ออเดอร์เดิม";
-            const displayTotal = cleanPrice(o.total);
-            
             return `
                 <div class="order-item">
-                    <b>👤 ลูกค้า: ${o.name} (${displayType})</b><br>
-                    <div style="margin: 5px 0; font-weight:bold;">ยอดรวม: ${displayTotal.toLocaleString()} บาท</div>
+                    <b>👤 ลูกค้า: ${o.name} (${o.type || 'ออเดอร์เดิม'})</b><br>
+                    <div style="margin: 5px 0; font-weight:bold;">ยอดรวม: ${cleanPrice(o.total).toLocaleString()} บาท</div>
                     <div class="btn-group">
                         <button class="status-btn" style="background:${o.status?'#51cf66':'#ff6b6b'}" onclick="toggleStatus(${realIdx})">${o.status?'✅ เตรียมแล้ว':'⏳ รอดำเนินการ'}</button>
                         <button class="status-btn" style="background:${o.paid?'#51cf66':'#ff6b6b'}" onclick="togglePaid(${realIdx})">${o.paid?'💳 จ่ายแล้ว':'❌ ยังไม่ได้ชำระ'}</button>
@@ -514,45 +508,35 @@
     }
 
     function openPopup(i, mode) {
-        try {
-            const o = orders[i];
-            const isReceipt = mode === 'receipt';
-            const emo = { user: isReceipt ? "" : "👤 ", flower: isReceipt ? "" : "🌹 ", stone: isReceipt ? "" : "🔮 ", paper: isReceipt ? "" : "📦 ", bow: isReceipt ? "" : "🎀 ", extra: isReceipt ? "" : "✨ ", chain: isReceipt ? "" : "⛓️ ", lock: isReceipt ? "" : "🔒 " };
-
-            let bodyHtml = `<b>${emo.user}ลูกค้า:</b> ${o.name}<br>`;
-            if (o.type === 'ดอกไม้') {
-                let flowerTxt = [];
-                if (o.details?.flowers) {
-                    for (let t in o.details.flowers) {
-                        for (let c in o.details.flowers[t]) {
-                            if (o.details.flowers[t][c] > 0) flowerTxt.push(`${c}${t === 'กริตเตอร์' ? '(กริต)' : ''} x${o.details.flowers[t][c]}`);
-                        }
+        const o = orders[i];
+        const isReceipt = mode === 'receipt';
+        let bodyHtml = `<b>ลูกค้า:</b> ${o.name}<br>`;
+        if (o.type === 'ดอกไม้') {
+            let flowerTxt = [];
+            if (o.details?.flowers) {
+                for (let t in o.details.flowers) {
+                    for (let c in o.details.flowers[t]) {
+                        if (o.details.flowers[t][c] > 0) flowerTxt.push(`${c}${t === 'กริตเตอร์' ? '(กริต)' : ''} x${o.details.flowers[t][c]}`);
                     }
                 }
-                bodyHtml += `<b>${emo.flower}สีดอก:</b> ${flowerTxt.join(", ") || "-"}<br>
-                             <b>${emo.paper}กระดาษ:</b> ${o.details?.paper || "-"}<br>
-                             <b>${emo.bow}โบว์:</b> ${o.details?.bow || "-"}<br>
-                             <b>${emo.extra}ของตกแต่ง:</b> ${o.details?.extras ? Object.entries(o.details.extras).filter(e => e[1] > 0).map(e => e[0] + '(' + e[1] + ')').join(", ") : "-"}`;
-            } else {
-                let stoneTxt = [];
-                if (o.details?.stones) {
-                    for (let s in o.details.stones) {
-                        if (o.details.stones[s] > 0) stoneTxt.push(`${s} x${o.details.stones[s]}`);
-                    }
-                }
-                bodyHtml += `<b>${emo.stone}หิน:</b> ${stoneTxt.join(", ") || "-"}<br>
-                             <b>${emo.chain}โซ่:</b> ${o.details?.chain || "-"}<br>
-                             <b>${emo.lock}ตัวล็อค:</b> ${o.details?.lock || "-"}<br>
-                             <b>${emo.extra}ของตกแต่ง:</b> ${o.details?.accessories?.length > 0 ? o.details.accessories.join(", ") : "-"}`;
             }
-
-            bodyHtml += `<br><br><b style="font-size:1.1rem; color:var(--pink-dark)">ยอดรวม: ${cleanPrice(o.total).toLocaleString()} บาท</b>`;
-            
-            document.getElementById("rc-date").innerText = "วันที่: " + o.date;
-            document.getElementById("modal-body").innerHTML = bodyHtml;
-            document.getElementById("receipt-extras").style.display = isReceipt ? "block" : "none";
-            document.getElementById("receiptModal").style.display = "block";
-        } catch(e) { alert("ไม่สามารถแสดงผลได้"); }
+            bodyHtml += `<b>สีดอก:</b> ${flowerTxt.join(", ") || "-"}<br>
+                         <b>กระดาษ:</b> ${o.details?.paper || "-"}<br>
+                         <b>โบว์:</b> ${o.details?.bow || "-"}<br>
+                         <b>ของตกแต่ง:</b> ${o.details?.extras ? Object.entries(o.details.extras).filter(e => e[1] > 0).map(e => e[0] + '(' + e[1] + ')').join(", ") : "-"}`;
+        } else {
+            let stoneTxt = [];
+            for (let s in o.details?.stones) { if (o.details.stones[s] > 0) stoneTxt.push(`${s} x${o.details.stones[s]}`); }
+            bodyHtml += `<b>หิน:</b> ${stoneTxt.join(", ") || "-"}<br>
+                         <b>โซ่:</b> ${o.details?.chain || "-"}<br>
+                         <b>ตัวล็อค:</b> ${o.details?.lock || "-"}<br>
+                         <b>ของตกแต่ง:</b> ${o.details?.accessories?.join(", ") || "-"}`;
+        }
+        bodyHtml += `<br><br><b style="font-size:1.1rem; color:var(--pink-dark)">ยอดรวม: ${cleanPrice(o.total).toLocaleString()} บาท</b>`;
+        document.getElementById("rc-date").innerText = "วันที่: " + o.date;
+        document.getElementById("modal-body").innerHTML = bodyHtml;
+        document.getElementById("receipt-extras").style.display = isReceipt ? "block" : "none";
+        document.getElementById("receiptModal").style.display = "block";
     }
 
     function renderSummary() {
@@ -560,13 +544,11 @@
         const flowerSale = orders.filter(o => o.type === 'ดอกไม้' || !o.type).reduce((s, o) => s + cleanPrice(o.total), 0);
         const braceletSale = orders.filter(o => o.type === 'กำไล').reduce((s, o) => s + cleanPrice(o.total), 0);
         const totalCost = costs.reduce((s, c) => s + (Number(c.amount) || 0), 0);
-
         document.getElementById("stat-sale").innerText = totalSale.toLocaleString();
         document.getElementById("stat-flower-sale").innerText = flowerSale.toLocaleString();
         document.getElementById("stat-bracelet-sale").innerText = braceletSale.toLocaleString();
         document.getElementById("stat-cost").innerText = totalCost.toLocaleString();
         document.getElementById("stat-profit").innerText = (totalSale - totalCost).toLocaleString();
-        
         document.getElementById("cost-history-body").innerHTML = [...costs].reverse().map((c, i) => 
             `<tr><td>${c.date}</td><td>${c.desc}</td><td>${Number(c.amount).toLocaleString()}</td><td><button onclick="deleteCost(${costs.length-1-i})" style="border:none; background:none; color:red;">ลบ</button></td></tr>`
         ).join("");
@@ -583,14 +565,14 @@
     }
 
     function renderOptions() {
-        document.getElementById("paper-grid").innerHTML = ["ดำ", "ขาว", "ชมพู", "แดง"].map(c => `<button class="square-btn" style="background:${colors[c]}; color:${c==='ขาว'?'#5a3d45':'#fff'}" onclick="selectedPaper='${c}'; document.getElementById('paperChoice').innerText='เลือก: ${c}'">${c}</button>`).join("");
-        document.getElementById("bow-grid").innerHTML = ["แดง", "ขาว", "ชมพู", "น้ำเงิน", "ม่วง", "ชมพูแก้ว", "แดงแก้ว"].map(c => `<button class="square-btn" style="background:${colors[c]}; color:${c==='ขาว'?'#5a3d45':'#fff'}" onclick="selectedBow='${c}'; document.getElementById('bowChoice').innerText='เลือก: ${c}'">${c}</button>`).join("");
+        document.getElementById("paper-grid").innerHTML = ["ดำ", "ขาว", "ชมพู", "แดง"].map(c => `<button class="square-btn" style="background:${colors[c]}; color:${c==='ขาว'?'#5a3d45':'#fff'}" onclick="addPaper('${c}')">${c}</button>`).join("");
+        document.getElementById("bow-grid").innerHTML = ["แดง", "ขาว", "ชมพู", "น้ำเงิน", "ม่วง", "ชมพูแก้ว", "แดงแก้ว"].map(c => `<button class="square-btn" style="background:${colors[c]}; color:${c==='ขาว'?'#5a3d45':'#fff'}" onclick="addBow('${c}')">${c}</button>`).join("");
         document.getElementById("extra-grid").innerHTML = Object.keys(extraPrice).map(e => `<button class="square-btn" style="background:#f2b5d4; color:#5a3d45;" onclick="selectedExtras['${e}']=(selectedExtras['${e}']||0)+1; calcTotal()">${e} +${extraPrice[e]}</button>`).join("");
     }
 
     function toggleStatus(i) { orders[i].status = !orders[i].status; updateStore(); }
     function togglePaid(i) { orders[i].paid = !orders[i].paid; updateStore(); }
-    function deleteOrder(i) { if(confirm("ต้องการลบออเดอร์นี้ใช่ไหม?")) { orders.splice(i, 1); updateStore(); } }
+    function deleteOrder(i) { if(confirm("ลบออเดอร์นี้?")) { orders.splice(i, 1); updateStore(); } }
     function deleteCost(i) { costs.splice(i, 1); localStorage.setItem("metist_costs", JSON.stringify(costs)); renderSummary(); }
     function updateStore() { localStorage.setItem("metist_orders", JSON.stringify(orders)); renderOrderList(); }
     function closeModal() { document.getElementById("receiptModal").style.display = "none"; }
