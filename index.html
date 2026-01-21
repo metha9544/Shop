@@ -2,7 +2,7 @@
 <html lang="th">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=0">
     <title>METIST - Flower & Luck</title>
     
     <link rel="apple-touch-icon" href="logo.png">
@@ -52,7 +52,17 @@
             box-shadow: 0 8px 20px rgba(212, 131, 152, 0.12);
         }
         h2 { font-size: 1.1rem; margin-top: 0; margin-bottom: 12px; }
-        input { width: 100%; padding: 12px; margin: 8px 0; border-radius: 14px; border: 1px solid #f2cbd3; box-sizing: border-box; }
+        
+        /* ปรับ Font-size เป็น 16px เพื่อไม่ให้เบราว์เซอร์ซูมเวลาพิมพ์ */
+        input { 
+            width: 100%; 
+            padding: 12px; 
+            margin: 8px 0; 
+            border-radius: 14px; 
+            border: 1px solid #f2cbd3; 
+            box-sizing: border-box; 
+            font-size: 16px; 
+        }
 
         .flower-flex-container { display: flex; justify-content: space-between; flex-wrap: nowrap; gap: 5px; margin-bottom: 15px; overflow-x: auto; padding-bottom: 5px; }
         .color-item { flex: 0 0 60px; text-align: center; min-width: 60px; cursor: pointer; }
