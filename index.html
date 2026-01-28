@@ -286,7 +286,16 @@
     let orders = JSON.parse(localStorage.getItem("metist_orders") || "[]");
     let costs = JSON.parse(localStorage.getItem("metist_costs") || "[]");
 
-    const colors = { แดง: "#e63946", ขาว: "#ffffff", ชมพู: "#f7b2cc", น้ำเงิน: "#457b9d", ม่วง: "#9b5de5", ดำ: "#333333", ชมพูแก้ว: "#ff007f", แดงแก้ว: "#b91d1d" };
+    const colors = { 
+        แดง: "#e63946", 
+        ขาว: "#ffffff", 
+        ชมพู: "#f7b2cc", 
+        น้ำเงิน: "#457b9d", 
+        ม่วง: "#9b5de5", 
+        ดำ: "#333333", 
+        ชมพูแก้ว: "#ff007f", 
+        แดงแก้ว: "#b91d1d" 
+    };
     const extraPrice = { ผีเสื้อ: 5, มงกุฎ: 10, ไฟLED: 25, ไข่มุก: 0, ขอบลูกไม้: 0, ขอบมุก: 0, การ์ด: 0 };
 
     let currentFlowerData = { "พื้น": {}, "กริตเตอร์": {} };
@@ -436,11 +445,9 @@
         }
     }
 
-        function openPopup(i, mode) {
+    function openPopup(i, mode) {
         const o = orders[i]; 
         const isReceipt = mode === 'receipt';
-        
-        // ส่วนหัว: ใบเสร็จไม่มีอิโมจิ / ดูข้อมูลมีอิโมจิ
         let body = isReceipt ? `ลูกค้า: คุณ ${o.name}<br>` : `👤 <b>ลูกค้า:</b> ${o.name}<br>`;
         
         if (o.type === 'ดอกไม้') {
@@ -452,7 +459,6 @@
                     }
                 }
             }
-            
             if (isReceipt) {
                 body += `สีดอก: ${fTxt.join(", ")}<br>` +
                         `กระดาษห่อ: ${o.details.paper||'-'}<br>` +
@@ -465,33 +471,25 @@
                         `✨ <b>ของตกแต่ง:</b> ${Object.entries(o.details.extras).filter(e=>e[1]>0).map(e=>e[0]).join(",")||'-'}`;
             }
         } else {
-            // --- ส่วนของกำไล (Bracelet) ---
             let sTxt = []; 
             for (let s in o.details.stones) if (o.details.stones[s] > 0) sTxt.push(`${s}x${o.details.stones[s]}`);
-            
-            // ดึงรายการของตกแต่งกำไล
-            let accTxt = (o.details.accessories && o.details.accessories.length > 0) 
-                         ? o.details.accessories.join(", ") 
-                         : "-";
-
+            let accTxt = (o.details.accessories && o.details.accessories.length > 0) ? o.details.accessories.join(", ") : "-";
             if (isReceipt) {
                 body += `รายการ: กำไลหินมงคล<br>` +
                         `หิน: ${sTxt.join(", ")}<br>` +
                         `ข้อมือ: ${o.details.wristSize}cm<br>` +
                         `โซ่: ${o.details.chain}<br>` +
                         `ตัวล็อค: ${o.details.lock}<br>` +
-                        `ของตกแต่ง: ${accTxt}`; // โชว์ในใบเสร็จ
+                        `ของตกแต่ง: ${accTxt}`;
             } else {
                 body += `🔮 <b>หิน:</b> ${sTxt.join(", ")}<br>` +
                         `📏 <b>ข้อมือ:</b> ${o.details.wristSize}cm<br>` +
                         `⛓️ <b>โซ่:</b> ${o.details.chain}<br>` +
                         `🔒 <b>ตัวล็อค:</b> ${o.details.lock}<br>` +
-                        `✨ <b>ตกแต่ง:</b> ${accTxt}`; // โชว์ในหน้าดูออเดอร์
+                        `✨ <b>ตกแต่ง:</b> ${accTxt}`;
             }
         }
-        
         body += `<br><br><b style="font-size:1.2rem; color:var(--pink-dark)">${isReceipt ? 'ยอดรวม:' : '💰 รวม:'} ${cleanPrice(o.total).toLocaleString()} ฿</b>`;
-        
         document.getElementById("rc-date").innerText = "วันที่: " + o.date;
         document.getElementById("modal-body").innerHTML = body;
         document.getElementById("receipt-extras").style.display = isReceipt ? "block" : "none";
@@ -543,7 +541,10 @@
     }
 
     document.getElementById("paper-grid").innerHTML = ["ดำ", "ขาว", "ชมพู", "แดง"].map(c => `<button class="square-btn" style="background:${colors[c]}; color:${c==='ขาว'?'#555':'#fff'}" onclick="selectedPapers.push('${c}'); document.getElementById('paperChoice').innerText='เลือก: '+selectedPapers.join(',')">${c}</button>`).join("");
-    document.getElementById("bow-grid").innerHTML = ["แดง", "ขาว", "ชมพู", "น้ำเงิน", "ม่วง"].map(c => `<button class="square-btn" style="background:${colors[c]}; color:${c==='ขาว'?'#555':'#fff'}" onclick="selectedBows.push('${c}'); document.getElementById('bowChoice').innerText='เลือก: '+selectedBows.join(',')">${c}</button>`).join("");
+    
+    // --- จุดที่แก้ไข: เพิ่มปุ่มโบว์ ชมพูแก้ว และ แดงแก้ว ---
+    document.getElementById("bow-grid").innerHTML = ["แดง", "ขาว", "ชมพู", "น้ำเงิน", "ม่วง", "ชมพูแก้ว", "แดงแก้ว"].map(c => `<button class="square-btn" style="background:${colors[c]}; color:${c==='ขาว'?'#555':'#fff'}" onclick="selectedBows.push('${c}'); document.getElementById('bowChoice').innerText='เลือก: '+selectedBows.join(',')">${c}</button>`).join("");
+    
     document.getElementById("extra-grid").innerHTML = Object.keys(extraPrice).map(e => `<button class="square-btn" style="background:#f2b5d4; color:#5a3d45;" onclick="selectedExtras['${e}']=(selectedExtras['${e}']||0)+1; calcTotal()">${e}+${extraPrice[e]}</button>`).join("");
 
     renderFlowers();
