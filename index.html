@@ -222,11 +222,15 @@
         <h2 style="margin-bottom:10px;">🔍 ค้นหาลูกค้า</h2>
         <input type="text" id="searchOrder" placeholder="พิมพ์ชื่อเพื่อค้นหา..." oninput="renderOrderList()" style="margin-bottom:0;">
     </div>
-    
-    <div style="display:flex; justify-content:space-between; padding:0 10px; margin-bottom:10px;">
+<div style="display:flex; justify-content:space-between; align-items: center; padding:0 10px; margin-bottom:10px;">
+    <div>
         <span id="pending-count" style="font-size:0.8rem; font-weight:bold; color:var(--pink-dark);"></span>
-        <span style="font-size:0.7rem; color:gray;">🌸 ดอกไม้ | 🔮 กำไล</span>
+        <button onclick="showTaskSummary()" style="margin-left:10px; padding:5px 12px; background:var(--pink); border:none; border-radius:10px; color:var(--text); font-size:11px; font-weight:bold; cursor:pointer; box-shadow: 0 2px 4px rgba(0,0,0,0.1);">📋 สรุปงานที่ต้องทำ</button>
     </div>
+
+    <span style="font-size:0.7rem; color:gray;">🌸 ดอกไม้ | 🔮 กำไล</span>
+</div>
+
 
     <div id="order-list"></div>
 </div>
@@ -515,6 +519,58 @@
         const p = orders.filter(o => !o.status).length;
         document.getElementById("nav-pending").innerText = p > 0 ? `(${p})` : "";
     }
+    
+function showTaskSummary() {
+    // กรองเฉพาะออเดอร์ดอกไม้ที่ยังไม่ได้เตรียม (status: false)
+    const pendingOrders = orders.filter(o => o.type === 'ดอกไม้' && !o.status);
+    
+    let summary = {};
+    let totalFlowers = 0;
+
+    pendingOrders.forEach(order => {
+        const flowers = order.details.flowers;
+        for (let type in flowers) {
+            for (let color in flowers[type]) {
+                const count = flowers[type][color];
+                if (count > 0) {
+                    // เก็บข้อมูลทั้ง ชื่อสี และ ประเภท เพื่อนำไปดึงค่าสีจริงมาแสดง
+                    const key = `${color} (${type})`;
+                    if (!summary[key]) {
+                        summary[key] = { count: 0, colorCode: colors[color] || '#ccc' };
+                    }
+                    summary[key].count += count;
+                    totalFlowers += count;
+                }
+            }
+        }
+    });
+
+    let html = `<h3 style="margin-top:0; color:var(--pink-dark);">รายการดอกไม้ที่ต้องทำ</h3>`;
+    
+    if (totalFlowers === 0) {
+        html += `<p style="color:gray;">ไม่มีออเดอร์ที่ค้างอยู่</p>`;
+    } else {
+        html += `<div style="text-align:left; background:#fff5f8; padding:15px; border-radius:15px; border:1px dashed var(--pink);">`;
+        for (let key in summary) {
+            html += `
+                <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:10px; border-bottom:1px solid #eee; padding-bottom:6px;">
+                    <div style="display:flex; align-items:center;">
+                        <div style="width:14px; height:14px; background:${summary[key].colorCode}; border-radius:50%; margin-right:10px; border:1px solid rgba(0,0,0,0.1);"></div>
+                        <span style="font-size:14px;">${key}</span>
+                    </div>
+                    <b style="color:var(--pink-dark); font-size:1.1rem;">x ${summary[key].count}</b>
+                </div>`;
+        }
+        html += `<div style="text-align:right; margin-top:12px; font-size:16px; font-weight:bold; color:var(--text);">รวมทั้งหมด: ${totalFlowers} ดอก</div>`;
+        html += `</div>`;
+        html += `<p style="font-size:11px; color:gray; margin-top:10px;">*สรุปจากออเดอร์ที่ "รอดำเนินการ" ทั้งหมด</p>`;
+    }
+
+    document.getElementById("modal-body").innerHTML = html;
+    document.getElementById("rc-date").innerText = "อัปเดต: " + new Date().toLocaleTimeString('th-TH');
+    document.getElementById("receipt-extras").style.display = "none"; 
+    document.getElementById("receiptModal").style.display = "block";
+}
 
     function toggleStatus(i) { orders[i].status = !orders[i].status; updateStore(); }
     function togglePaid(i) { orders[i].paid = !orders[i].paid; updateStore(); }
