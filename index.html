@@ -2,553 +2,157 @@
 <html lang="th">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=0">
-    <title>METIST - Flower & Luck</title>
-    
-    <link rel="apple-touch-icon" href="logo.png">
-    <link rel="icon" type="image/png" href="logo.png">
-    <meta name="apple-mobile-web-app-capable" content="yes">
-    <meta name="apple-mobile-web-app-status-bar-style" content="default">
-    <meta name="apple-mobile-web-app-title" content="METIST">
-
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Runic Tiling Staggered</title>
     <style>
-        :root {
-            --pink: #f8c8dc;
-            --pink-dark: #d48398;
-            --purple: #e6d9ff;
-            --purple-dark: #9b5de5;
-            --green: #d9f5e3;
-            --bg: #fdf2f7;
-            --text: #5a3d45;
-        }
-
-        body {
-            font-family: 'Segoe UI', Tahoma, sans-serif;
-            background: var(--bg);
-            margin: 0;
-            padding: 15px;
-            color: var(--text);
-        }
-
-        .header { text-align: center; margin-bottom: 15px; }
-        .header h1 { color: var(--pink-dark); margin: 0; font-size: 1.8rem; }
-        .header p { color: #bca0a0; margin: 0; font-size: 0.8rem; letter-spacing: 2px; }
-
-        .nav-menu { display: flex; gap: 5px; margin-bottom: 20px; }
-        .nav-menu button {
-            flex: 1; padding: 10px 2px; border: 1px solid #f2cbd3; border-radius: 12px;
-            background: white; color: var(--pink-dark); font-weight: bold;
-            box-shadow: 0 4px 6px rgba(0,0,0,0.05); cursor: pointer; font-size: 11px;
-        }
-        .nav-menu button.active { background: var(--pink); color: white; border-color: var(--pink); }
-        .en-sub { display: block; font-size: 8px; font-weight: normal; opacity: 0.8; }
-
-        .page { display: none; }
-        .page.active { display: block; }
-        .card { 
-            background: #fff; 
-            border-radius: 20px; 
-            padding: 18px; 
-            margin-bottom: 15px; 
-            box-shadow: 0 8px 20px rgba(212, 131, 152, 0.12);
-        }
-        h2 { font-size: 1.1rem; margin-top: 0; margin-bottom: 12px; }
+        body { font-family: 'Segoe UI', sans-serif; background: #1a1a1a; color: #eee; display: flex; justify-content: center; padding: 20px; }
+        .card { background: #252525; padding: 25px; border-radius: 20px; box-shadow: 0 10px 40px rgba(0,0,0,0.6); width: 100%; max-width: 500px; border: 1px solid #333; }
+        h3 { text-align: center; color: #00ffcc; margin-bottom: 20px; text-transform: uppercase; letter-spacing: 2px; }
         
-        input { 
-            width: 100%; 
-            padding: 12px; 
-            margin: 8px 0; 
-            border-radius: 14px; 
-            border: 1px solid #f2cbd3; 
-            box-sizing: border-box; 
-            font-size: 16px; 
-        }
-
-        .flower-flex-container { display: flex; justify-content: space-between; flex-wrap: nowrap; gap: 5px; margin-bottom: 15px; overflow-x: auto; padding-bottom: 5px; }
-        .color-item { flex: 0 0 60px; text-align: center; min-width: 60px; cursor: pointer; }
-        .color-btn { 
-            width: 45px; height: 45px; border-radius: 50%; 
-            border: 2px solid #fff; outline: 1px solid #eee;
-            box-shadow: 0 4px 8px rgba(0,0,0,0.1); 
-            margin: 0 auto; display: block; 
-        }
-        .count { font-size: 9px; margin-top: 5px; font-weight: bold; line-height: 1.2; }
-
-        .type-selector { display: flex; gap: 10px; background: #fff0f3; padding: 8px; border-radius: 12px; justify-content: center; margin-bottom: 15px; font-size: 13px; }
-        .grid-options { display: grid; grid-template-columns: repeat(4, 1fr); gap: 8px; }
-        .square-btn { 
-            border: 1px solid rgba(0,0,0,0.05); border-radius: 10px; padding: 10px 2px; 
-            color: #fff; cursor: pointer; font-size: 11px; font-weight: bold; 
-            text-shadow: 1px 1px 2px rgba(0,0,0,0.2);
-        }
-
-        .order-item { background: white; border-radius: 18px; padding: 15px; margin-bottom: 12px; box-shadow: 0 4px 12px rgba(0,0,0,0.05); }
-        .btn-group { display: flex; flex-wrap: wrap; gap: 5px; margin-top: 10px; }
-        .status-btn { border: none; border-radius: 10px; padding: 8px 10px; color: white; font-weight: bold; cursor: pointer; font-size: 11px; }
-
-        .summary-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; margin-bottom: 10px; }
-        .summary-box { padding: 12px 5px; border-radius: 15px; text-align: center; font-weight: bold; box-shadow: 0 4px 10px rgba(0,0,0,0.05); }
-        .summary-box span { display: block; font-size: 10px; margin-bottom: 3px; }
+        .control-group { margin-bottom: 15px; }
+        label { font-size: 13px; color: #888; display: block; margin-bottom: 5px; }
         
-        .split-sales-container { display: flex; gap: 10px; margin-bottom: 15px; }
-        .split-box { flex: 1; padding: 8px; border-radius: 12px; text-align: center; background: #ffd1dc; color: #fff; text-shadow: 1px 1px 0px rgba(0,0,0,0.1); box-shadow: 0 4px 10px rgba(0,0,0,0.05); }
-        .split-box span { display: block; font-size: 10px; font-weight: bold; }
-        .split-box div { font-size: 18px; font-weight: bold; }
+        input[type="text"], input[type="number"], input[type="color"] { width: 100%; padding: 12px; background: #333; border: 1px solid #444; border-radius: 10px; color: white; box-sizing: border-box; }
+        input[type="color"] { height: 45px; cursor: pointer; padding: 5px; }
+        .row { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+        
+        input[type="range"] { width: 100%; accent-color: #00ffcc; cursor: pointer; }
+        
+        button { width: 100%; padding: 14px; border: none; border-radius: 10px; font-weight: bold; cursor: pointer; margin-top: 10px; transition: 0.3s; }
+        .btn-gen { background: #00ffcc; color: #000; }
+        .btn-dl { background: #28a745; color: white; margin-top: 10px; }
+        button:hover { opacity: 0.8; transform: translateY(-1px); }
 
-        table { width: 100%; border-collapse: collapse; margin-top: 10px; }
-        th, td { padding: 10px 5px; text-align: center; font-size: 13px; border-bottom: 1px solid #eee; }
-        th { background: #f8f9fa; color: #888; font-weight: normal; }
-
-        .modal { display: none; position: fixed; z-index: 1000; left: 0; top: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.6); overflow-y: auto; }
-        .modal-content { background: white; width: 85%; max-width: 320px; margin: 40px auto; padding: 20px; border-radius: 25px; text-align: center; }
-        .receipt-border { border: 2px dashed var(--pink-dark); border-radius: 20px; padding: 20px; }
-        .receipt-details { text-align: left; font-size: 0.9rem; line-height: 1.7; margin: 15px 0; border-top: 1px solid #f2f2f2; padding-top: 10px; }
+        #canvas-wrap { 
+            margin-top: 20px; 
+            border: 2px solid #333; 
+            border-radius: 10px;
+            background-color: #000;
+            background-image: radial-gradient(#333 1px, transparent 1px);
+            background-size: 20px 20px;
+            max-height: 400px;
+            overflow: auto;
+        }
+        canvas { display: block; margin: 0 auto; }
     </style>
 </head>
 <body>
 
-<div class="header">
-    <h1>🌸 METIST ✨</h1>
-    <p>FLOWER & LUCK</p>
-</div>
-
-<div class="nav-menu">
-    <button id="btn-flower" class="active" onclick="switchPage('flower')">สั่งดอกไม้ <span class="en-sub">Flower</span></button>
-    <button id="btn-bracelet" onclick="switchPage('bracelet')">สั่งกำไล <span class="en-sub">Bracelet</span></button>
-    <button id="btn-orders" onclick="switchPage('orders')">ออเดอร์ <span id="nav-pending" style="color:red"></span><span class="en-sub">Order List</span></button>
-    <button id="btn-summary" onclick="switchPage('summary')">สรุปยอด <span class="en-sub">Summary</span></button>
-</div>
-
-<div id="page-flower" class="page active">
-    <input id="customer" placeholder="กรอกชื่อลูกค้าที่นี่...">
+<div class="card">
+    <h3>Runic Staggered Grid</h3>
     
-    <div class="card">
-        <h2>🌹 สีดอกไม้</h2>
-        <div class="type-selector">
-            <label><input type="radio" name="flowerType" value="กริตเตอร์" checked onchange="renderFlowers()"> สีกริตเตอร์</label>
-            <label><input type="radio" name="flowerType" value="พื้น" onchange="renderFlowers()"> สีพื้น</label>
+    <div class="row">
+        <div class="control-group">
+            <label>กว้าง (cm)</label>
+            <input type="number" id="wCm" value="10">
         </div>
-        <div class="flower-flex-container" id="flower-grid"></div>
-        <input id="basePrice" type="number" placeholder="ราคาช่อ (บาท)" oninput="calcTotal()">
-    </div>
-
-    <div class="card">
-        <h2>📦 กระดาษห่อ</h2>
-        <div class="grid-options" id="paper-grid"></div>
-        <div id="paperChoice" style="margin-top:8px; font-size:12px; font-weight:bold; color:var(--pink-dark)">เลือก: -</div>
-    </div>
-
-    <div class="card">
-        <h2>🎀 โบว์</h2>
-        <div class="grid-options" id="bow-grid"></div>
-        <div id="bowChoice" style="margin-top:8px; font-size:12px; font-weight:bold; color:var(--pink-dark)">เลือก: -</div>
-    </div>
-
-    <div class="card">
-        <h2>✨ ของตกแต่ง</h2>
-        <div class="grid-options" id="extra-grid"></div>
-    </div>
-
-    <div class="card" style="text-align:center; background: #fff0f3; border: 2px dashed var(--pink);">
-        <h2 id="summary-text" style="margin-bottom:0;">ราคารวม: 0 บาท</h2>
-    </div>
-    
-    <button onclick="saveOrder('ดอกไม้')" style="width:100%; background:var(--pink-dark); color:white; padding:15px; border:none; border-radius:18px; font-size:18px; font-weight:bold; cursor:pointer; margin-top:10px;">บันทึกออเดอร์</button>
-</div>
-
-<div id="page-bracelet" class="page">
-    <input id="customer-br" placeholder="กรอกชื่อลูกค้าที่นี่...">
-
-    <div class="card">
-        <h2>🔮 เลือกหิน (Lucky Stone)</h2>
-        <p style="font-size:10px; color:gray; margin-top:-10px;">*ชิ้นที่ 2 ขึ้นไป +30 บาท</p>
-        <div class="flower-flex-container">
-            <div class="color-item" onclick="addStone('Rose Quartz')"><div class="color-btn" style="background: #eec9d2;"></div><div class="count">Rose Quartz</div></div>
-            <div class="color-item" onclick="addStone('Jadiete')"><div class="color-btn" style="background: #a8e6cf;"></div><div class="count">Jadiete</div></div>
-            <div class="color-item" onclick="addStone('Amethyst')"><div class="color-btn" style="background: #b39ddb;"></div><div class="count">Amethyst</div></div>
-            <div class="color-item" onclick="addStone('Pyrite')"><div class="color-btn" style="background: #d4af37;"></div><div class="count">Pyrite</div></div>
-            <div class="color-item" onclick="addStone('Aquamarine')"><div class="color-btn" style="background: #add8e6;"></div><div class="count">Aquamarine</div></div>
-            <div class="color-item" onclick="addStone('Unakite')"><div class="color-btn" style="background: #9ab973;"></div><div class="count">Unakite</div></div>
-        </div>
-        <div id="stoneChoice" style="margin-top:8px; font-size:12px; font-weight:bold; color:var(--pink-dark)">เลือกหิน: -</div>
-        <button onclick="resetBracelet()" style="font-size:10px; margin-top:5px; border:none; background:#eee; padding:4px 8px; border-radius:5px;">ล้างข้อมูลกำไล</button>
-    </div>
-
-    <div class="card">
-        <h2>⛓️ รูปแบบโซ่ (Chain)</h2>
-        <div class="grid-options">
-            <div onclick="setChain('แบบที่ 1')" style="cursor:pointer; text-align:center;"><img src="001.png" width="45" height="45" style="border-radius:8px; border:1px solid #eee;"><div style="font-size:9px;">แบบที่ 1</div></div>
-            <div onclick="setChain('แบบที่ 2')" style="cursor:pointer; text-align:center;"><img src="002.png" width="45" height="45" style="border-radius:8px; border:1px solid #eee;"><div style="font-size:9px;">แบบที่ 2</div></div>
-            <div onclick="setChain('แบบที่ 3')" style="cursor:pointer; text-align:center;"><img src="003.png" width="45" height="45" style="border-radius:8px; border:1px solid #eee;"><div style="font-size:9px;">แบบที่ 3</div></div>
-            <div onclick="setChain('แบบที่ 4 (สีทอง)')" style="cursor:pointer; text-align:center;"><img src="004.png" width="45" height="45" style="border-radius:8px; border:1px solid #eee;"><div style="font-size:9px;">สีทอง +10฿</div></div>
-        </div>
-        <div id="chainChoice" style="margin-top:8px; font-size:12px; font-weight:bold; color:var(--pink-dark)">เลือกโซ่: -</div>
-        <div style="margin-top:15px;">
-            <label style="font-size: 13px; font-weight: bold;">ความยาวข้อมือ (cm):</label>
-            <input type="number" id="wrist-size" placeholder="กรอกความยาวข้อมือ">
+        <div class="control-group">
+            <label>สูง (cm)</label>
+            <input type="number" id="hCm" value="10">
         </div>
     </div>
 
-    <div class="card">
-        <h2>🔒 รูปแบบตัวล็อค</h2>
-        <div class="grid-options">
-            <button class="square-btn" style="background:#bca0a0;" onclick="setLock('ห่วง', 0)">ห่วง (ฟรี)</button>
-            <button class="square-btn" style="background:#f8c8dc; color:#5a3d45;" onclick="setLock('ดอกไม้', 10)">ดอกไม้ (+10฿)</button>
+    <div class="control-group">
+        <label>อักษรรูน (เช่น ᚠ ᚢ ᚦ)</label>
+        <input type="text" id="txt" value="ᚠ ᚢ ᚦ">
+    </div>
+
+    <div class="row">
+        <div class="control-group">
+            <label>สีลายน้ำ</label>
+            <input type="color" id="colorPicker" value="#00ffcc">
         </div>
-        <div id="lockChoice" style="margin-top:8px; font-size:12px; font-weight:bold; color:var(--pink-dark)">เลือกตัวล็อค: -</div>
-    </div>
-
-    <div class="card">
-        <h2>✨ ของตกแต่ง (Accessories)</h2>
-        <div class="grid-options">
-            <button class="square-btn" style="background:#eee; color:#333;" onclick="addAccessory('จี้หัวใจเงิน')">หัวใจเงิน</button>
-            <button class="square-btn" style="background:#fae1a5; color:#333;" onclick="addAccessory('จี้หัวใจทอง')">หัวใจทอง</button>
-            <button class="square-btn" style="background:#eee; color:#333;" onclick="addAccessory('จี้ดาวเงิน')">ดาวเงิน</button>
-            <button class="square-btn" style="background:#fae1a5; color:#333;" onclick="addAccessory('จี้ดาวทอง')">ดาวทอง</button>
-            <button class="square-btn" style="background:#fff; color:#333; border:1px solid #ddd;" onclick="addAccessory('ไข่มุก')">ไข่มุก</button>
+        <div class="control-group">
+            <label>ความหนา (Weight)</label>
+            <input type="range" id="weight" min="100" max="900" step="100" value="600">
         </div>
-        <div id="accList" style="margin-top:8px; font-size:11px; color:#888;">รายการ: -</div>
     </div>
 
-    <div class="card" style="text-align:center; background: #fdf2f7; border: 2px dashed var(--pink-dark);">
-        <h2 id="br-summary-text" style="margin-bottom:0;">ราคารวม: 59 บาท</h2>
-    </div>
-
-    <button onclick="saveOrder('กำไล')" style="width:100%; background:var(--pink-dark); color:white; padding:15px; border:none; border-radius:18px; font-size:18px; font-weight:bold; cursor:pointer; margin-top:10px;">บันทึกออเดอร์กำไล</button>
-</div>
-
-<div id="page-orders" class="page">
-    <div class="card">
-        <h2 style="margin-bottom:10px;">🔍 ค้นหาลูกค้า</h2>
-        <input type="text" id="searchOrder" placeholder="พิมพ์ชื่อเพื่อค้นหา..." oninput="renderOrderList()" style="margin-bottom:0;">
-    </div>
-    
-    <div style="display:flex; justify-content:space-between; padding:0 10px; margin-bottom:10px;">
-        <span id="pending-count" style="font-size:0.8rem; font-weight:bold; color:var(--pink-dark);"></span>
-        <span style="font-size:0.7rem; color:gray;">🌸 ดอกไม้ | 🔮 กำไล</span>
-    </div>
-
-    <div id="order-list"></div>
-</div>
-
-<div id="page-summary" class="page">
-    <div class="summary-grid">
-        <div class="summary-box" style="background:var(--green)"><span>ยอดขายรวม</span><div id="stat-sale">0</div></div>
-        <div class="summary-box" style="background:var(--purple)"><span>ต้นทุน</span><div id="stat-cost">0</div></div>
-        <div class="summary-box" style="background:var(--pink)"><span>กำไร</span><div id="stat-profit">0</div></div>
-    </div>
-    <div class="split-sales-container">
-        <div class="split-box"><span>ยอดขายดอกไม้</span><div id="stat-flower-sale">0</div></div>
-        <div class="split-box"><span>ยอดขายกำไล</span><div id="stat-bracelet-sale">0</div></div>
-    </div>
-
-    <div class="card" style="border: 1px solid var(--pink); background: #fff5f8;">
-        <h3>💾 จัดการข้อมูล (Backup)</h3>
-        <div style="display: flex; gap: 10px;">
-            <button onclick="exportData()" style="flex: 1; background: #51cf66; color: white; padding: 12px; border: none; border-radius: 12px; font-weight: bold; cursor: pointer;">ส่งออกข้อมูล</button>
-            <button onclick="document.getElementById('importFile').click()" style="flex: 1; background: #fab005; color: white; padding: 12px; border: none; border-radius: 12px; font-weight: bold; cursor: pointer;">นำเข้าข้อมูล</button>
+    <div class="row">
+        <div class="control-group">
+            <label>ความจาง (Opacity)</label>
+            <input type="range" id="opac" min="0.05" max="1" step="0.05" value="0.3">
         </div>
-        <input type="file" id="importFile" style="display:none" accept=".json" onchange="importData(event)">
-    </div>
-
-    <div class="card">
-        <h3>บันทึกค่าใช้จ่าย</h3>
-        <input type="text" id="cost-desc" placeholder="รายละเอียด">
-        <input type="number" id="cost-amount" placeholder="จำนวนเงิน">
-        <button onclick="addCost()" style="width:100%; background:var(--purple); padding:12px; border:none; border-radius:12px; font-weight:bold; cursor: pointer;">เพิ่มค่าใช้จ่าย</button>
-    </div>
-    
-    <div class="card">
-        <h3>ประวัติค่าใช้จ่าย</h3>
-        <table id="cost-table">
-            <thead><tr><th>วันที่</th><th>รายการ</th><th>ยอด</th><th>ลบ</th></tr></thead>
-            <tbody id="cost-history-body"></tbody>
-        </table>
-    </div>
-</div>
-
-<div id="receiptModal" class="modal">
-    <div class="modal-content">
-        <div class="receipt-border">
-            <h2 style="color:var(--pink-dark); margin-bottom:5px;">🌸 METIST ✨</h2>
-            <div id="rc-date" style="font-size: 11px; color: #888;"></div>
-            <div class="receipt-details" id="modal-body"></div>
-            <div id="receipt-extras">
-                <img src="qr.png" width="130">
-                <p style="font-size: 10px; color: #888; margin-top: 10px;">ขอบคุณที่อุดหนุน💐</p>
-            </div>
+        <div class="control-group">
+            <label>ความถี่ (Density)</label>
+            <input type="range" id="density" min="40" max="150" step="10" value="80">
         </div>
-        <button onclick="closeModal()" style="width:100%; background:#5a3d45; color:white; padding:12px; border:none; border-radius:15px; margin-top:15px; font-weight:bold;">ปิด</button>
+    </div>
+
+    <button class="btn-gen" onclick="draw()">สร้างลายน้ำสลับฟันปลา</button>
+    <button class="btn-dl" onclick="download()">ดาวน์โหลด PNG</button>
+
+    <div id="canvas-wrap">
+        <canvas id="cvs"></canvas>
     </div>
 </div>
 
 <script>
-    let orders = JSON.parse(localStorage.getItem("metist_orders") || "[]");
-    let costs = JSON.parse(localStorage.getItem("metist_costs") || "[]");
+    const cvs = document.getElementById('cvs');
+    const ctx = cvs.getContext('2d');
 
-    const colors = { 
-        แดง: "#e63946", 
-        ขาว: "#ffffff", 
-        ชมพู: "#f7b2cc", 
-        น้ำเงิน: "#457b9d", 
-        ม่วง: "#9b5de5", 
-        ดำ: "#333333", 
-        ชมพูแก้ว: "#ff007f", 
-        แดงแก้ว: "#b91d1d" 
-    };
-    const extraPrice = { ผีเสื้อ: 5, มงกุฎ: 10, ไฟLED: 25, ไข่มุก: 0, ขอบลูกไม้: 0, ขอบมุก: 0, การ์ด: 0 };
-
-    let currentFlowerData = { "พื้น": {}, "กริตเตอร์": {} };
-    let selectedPapers = []; 
-    let selectedBows = []; 
-    let selectedExtras = {};
-    let brData = { stones: {}, chain: "", lock: "", lockPrice: 0, chainPrice: 0, accessories: [], basePrice: 59, wristSize: "" };
-
-    const cleanPrice = (val) => typeof val === 'number' ? val : parseFloat(String(val).replace(/[^0-9.]/g, '')) || 0;
-
-    function switchPage(pageId) {
-        document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
-        document.querySelectorAll('.nav-menu button').forEach(b => b.classList.remove('active'));
-        document.getElementById('page-' + pageId).classList.add('active');
-        document.getElementById('btn-' + pageId).classList.add('active');
-        if(pageId === 'orders') renderOrderList();
-        if(pageId === 'summary') renderSummary();
-        updatePendingNav();
+    function hexToRgba(hex, opacity) {
+        let r = parseInt(hex.slice(1, 3), 16);
+        let g = parseInt(hex.slice(3, 5), 16);
+        let b = parseInt(hex.slice(5, 7), 16);
+        return `rgba(${r}, ${g}, ${b}, ${opacity})`;
     }
 
-    function renderFlowers() {
-        const flowerList = ["แดง", "ขาว", "ชมพู", "น้ำเงิน", "ม่วง"];
-        document.getElementById("flower-grid").innerHTML = flowerList.map(c => `
-            <div class="color-item" onclick="addFlower('${c}')">
-                <div class="color-btn" style="background:${colors[c]}"></div>
-                <div class="count">${c}<br>พื้น:${currentFlowerData["พื้น"][c]||0} กริต:${currentFlowerData["กริตเตอร์"][c]||0}</div>
-            </div>`).join("");
-    }
-
-    function addFlower(color) {
-        const type = document.querySelector('input[name="flowerType"]:checked').value;
-        currentFlowerData[type][color] = (currentFlowerData[type][color] || 0) + 1;
-        renderFlowers(); calcTotal();
-    }
-
-    function calcTotal() {
-        let total = Number(document.getElementById("basePrice").value || 0);
-        Object.keys(selectedExtras).forEach(e => total += (selectedExtras[e] * extraPrice[e]));
-        document.getElementById("summary-text").innerText = `ราคารวม: ${total} บาท`;
-        return total;
-    }
-
-    function addStone(name) { brData.stones[name] = (brData.stones[name] || 0) + 1; renderStoneList(); calcBrTotal(); }
-    function renderStoneList() {
-        let sel = []; for (let s in brData.stones) { if (brData.stones[s] > 0) sel.push(`${s}x${brData.stones[s]}`); }
-        document.getElementById('stoneChoice').innerText = "เลือกหิน: " + (sel.join(", ") || "-");
-    }
-    function setChain(n) { brData.chain = n; brData.chainPrice = n.includes('ทอง') ? 10 : 0; document.getElementById('chainChoice').innerText = "เลือก: "+n; calcBrTotal(); }
-    function setLock(n, p) { brData.lock = n; brData.lockPrice = p; document.getElementById('lockChoice').innerText = "เลือก: "+n; calcBrTotal(); }
-    function addAccessory(n) { brData.accessories.push(n); document.getElementById('accList').innerText = "รายการ: " + brData.accessories.join(","); calcBrTotal(); }
-    function calcBrTotal() {
-        let total = brData.basePrice;
-        let sCount = Object.values(brData.stones).reduce((a, b) => a + b, 0);
-        if (sCount > 1) total += (sCount - 1) * 30;
-        total += brData.lockPrice + brData.chainPrice;
-        let normal = 0, pearl = 0;
-        brData.accessories.forEach(i => i === 'ไข่มุก' ? pearl++ : normal++);
-        if (normal > 1) total += (normal - 1) * 5;
-        if (pearl > 1) total += (pearl - 1) * 5;
-        document.getElementById("br-summary-text").innerText = `ราคารวม: ${total} บาท`;
-        return total;
-    }
-
-    function resetBracelet() {
-        brData = { stones: {}, chain: "", lock: "", lockPrice: 0, chainPrice: 0, accessories: [], basePrice: 59, wristSize: "" };
-        document.getElementById('stoneChoice').innerText = "เลือกหิน: -"; document.getElementById('chainChoice').innerText = "เลือกโซ่: -";
-        document.getElementById('lockChoice').innerText = "เลือกตัวล็อค: -"; document.getElementById('accList').innerText = "รายการ: -";
-        document.getElementById('wrist-size').value = ""; calcBrTotal();
-    }
-
-    function saveOrder(productType) {
-        let name, total, details;
-        if(productType === 'ดอกไม้') {
-            name = document.getElementById("customer").value;
-            total = calcTotal();
-            details = { flowers: JSON.parse(JSON.stringify(currentFlowerData)), paper: selectedPapers.join(", "), bow: selectedBows.join(", "), extras: {...selectedExtras} };
-        } else {
-            name = document.getElementById("customer-br").value;
-            total = calcBrTotal();
-            brData.wristSize = document.getElementById('wrist-size').value;
-            details = JSON.parse(JSON.stringify(brData));
-        }
-        if(!name) { alert("กรุณาใส่ชื่อลูกค้า"); return; }
-        orders.push({ id: Date.now(), name, type: productType, total, details, date: new Date().toLocaleDateString('th-TH'), status: false, paid: false });
-        localStorage.setItem("metist_orders", JSON.stringify(orders));
+    function draw() {
+        const pxW = Math.round(document.getElementById('wCm').value * 37.8);
+        const pxH = Math.round(document.getElementById('hCm').value * 37.8);
+        const runeArray = document.getElementById('txt').value.trim().split(/\s+/);
         
-        if(productType === 'ดอกไม้') {
-            document.getElementById("customer").value = ""; currentFlowerData = { "พื้น": {}, "กริตเตอร์": {} };
-            selectedPapers = []; selectedBows = []; selectedExtras = {};
-            document.getElementById("basePrice").value = ""; renderFlowers(); calcTotal();
-        } else {
-            resetBracelet(); document.getElementById("customer-br").value = "";
-        }
-        document.getElementById("searchOrder").value = "";
-        switchPage('orders');
-    }
+        const opacity = document.getElementById('opac').value;
+        const weight = document.getElementById('weight').value;
+        const color = document.getElementById('colorPicker').value;
+        const step = parseInt(document.getElementById('density').value);
 
-    function renderOrderList() {
-        const listDiv = document.getElementById("order-list");
-        const search = document.getElementById("searchOrder").value.toLowerCase();
-        
-        let filtered = orders.filter(o => o.name.toLowerCase().includes(search));
-        
-        filtered.sort((a, b) => {
-            if (a.status !== b.status) return a.status ? 1 : -1;
-            if (a.status === true && b.status === true) {
-                if (a.paid !== b.paid) return a.paid ? 1 : -1;
+        cvs.width = pxW;
+        cvs.height = pxH;
+        ctx.clearRect(0, 0, pxW, pxH);
+
+        ctx.fillStyle = hexToRgba(color, opacity);
+        ctx.textAlign = 'center';
+        ctx.textBaseline = 'middle';
+
+        let rowIndex = 0;
+        // วางแนวตั้ง (Y)
+        for (let y = 0; y < pxH + step; y += step * 0.8) {
+            // เลื่อน X สลับแถว (ฟันปลา)
+            let offsetX = (rowIndex % 2 === 0) ? 0 : step / 2;
+            
+            // วางแนวนอน (X)
+            for (let x = 0; x < pxW + step; x += step) {
+                // สุ่มเลือกรูน 1 ตัวจากรายการ
+                const rune = runeArray[Math.floor(Math.random() * runeArray.length)];
+                
+                ctx.save();
+                ctx.translate(x + offsetX, y);
+                
+                // สุ่มขนาด (ใหญ่-เล็ก) 
+                const randomScale = 0.6 + Math.random() * 0.8; // สุ่มระหว่าง 0.6x ถึง 1.4x
+                const fontSize = 24 * randomScale;
+                ctx.font = `${weight} ${fontSize}px "Segoe UI", sans-serif`;
+                
+                // สุ่มมุมหมุนเล็กน้อย (-15 ถึง 15 องศา) เพื่อความเป็นธรรมชาติ
+                ctx.rotate((Math.random() * 30 - 15) * Math.PI / 180);
+                
+                ctx.fillText(rune, 0, 0);
+                ctx.restore();
             }
-            return b.id - a.id;
-        });
-
-        const pending = orders.filter(o => !o.status).length;
-        document.getElementById("pending-count").innerText = `รอดำเนินการ: ${pending}`;
-
-        listDiv.innerHTML = filtered.map((o) => {
-            const realIdx = orders.findIndex(orig => orig.id === o.id);
-            const isFlower = o.type === 'ดอกไม้';
-            const accent = isFlower ? '#d48398' : '#9b5de5';
-            const bg = isFlower ? '#fff5f8' : '#f9f5ff';
-
-            return `
-                <div class="order-item" style="border-left: 8px solid ${accent}; background: ${bg};">
-                    <div style="display:flex; justify-content:space-between; font-size:11px; font-weight:bold; color:${accent}">
-                        <span>${isFlower ? '🌸 FLOWER' : '🔮 BRACELET'} ${o.status ? '✅' : '⏳'}</span>
-                        <span style="color:gray">${o.date}</span>
-                    </div>
-                    <div style="margin:5px 0"><b>👤 ${o.name}</b></div>
-                    <div style="font-weight:bold">ยอด: ${cleanPrice(o.total).toLocaleString()} ฿</div>
-                    <div class="btn-group">
-                        <button class="status-btn" style="background:${o.status ? '#51cf66' : '#ff6b6b'}; flex:1" onclick="toggleStatus(${realIdx})">
-                            ${o.status ? 'ดำเนินการแล้ว' : 'รอดำเนินการ'}
-                        </button>
-                        <button class="status-btn" style="background:${o.paid ? '#51cf66' : '#ff6b6b'}; flex:1" onclick="togglePaid(${realIdx})">
-                            ${o.paid ? 'จ่ายแล้ว' : 'ยังไม่ได้ชำระ'}
-                        </button>
-                    </div>
-                    <div class="btn-group">
-                        <button class="status-btn" style="background:white; color:${accent}; border:1px solid ${accent}; flex:1" onclick="openPopup(${realIdx}, 'order')">รายละเอียด</button>
-                        <button class="status-btn" style="background:white; color:${accent}; border:1px solid ${accent}; flex:1" onclick="openPopup(${realIdx}, 'receipt')">ใบเสร็จ</button>
-                        <button class="status-btn" style="background:#eee; color:#999; width:35px" onclick="deleteOrder(${realIdx})">🗑️</button>
-                    </div>
-                </div>`;
-        }).join("");
-
-        if (filtered.length === 0) {
-            listDiv.innerHTML = `<div style="text-align:center; padding:40px; color:#999;">ไม่พบรายการ...</div>`;
+            rowIndex++;
         }
     }
 
-    function openPopup(i, mode) {
-        const o = orders[i]; 
-        const isReceipt = mode === 'receipt';
-        let body = isReceipt ? `ลูกค้า: คุณ ${o.name}<br>` : `👤 <b>ลูกค้า:</b> ${o.name}<br>`;
-        
-        if (o.type === 'ดอกไม้') {
-            let fTxt = [];
-            for (let t in o.details.flowers) {
-                for (let c in o.details.flowers[t]) {
-                    if (o.details.flowers[t][c] > 0) {
-                        fTxt.push(`${c}${t==='กริตเตอร์'?'(กริต)':''} x${o.details.flowers[t][c]}`);
-                    }
-                }
-            }
-            if (isReceipt) {
-                body += `สีดอก: ${fTxt.join(", ")}<br>` +
-                        `กระดาษห่อ: ${o.details.paper||'-'}<br>` +
-                        `โบว์: ${o.details.bow||'-'}<br>` +
-                        `ของตกแต่ง: ${Object.entries(o.details.extras).filter(e=>e[1]>0).map(e=>e[0]).join(",")||'-'}`;
-            } else {
-                body += `🌹 <b>สีดอก:</b> ${fTxt.join(", ")}<br>` +
-                        `📦 <b>กระดาษห่อ:</b> ${o.details.paper||'-'}<br>` +
-                        `🎀 <b>โบว์:</b> ${o.details.bow||'-'}<br>` +
-                        `✨ <b>ของตกแต่ง:</b> ${Object.entries(o.details.extras).filter(e=>e[1]>0).map(e=>e[0]).join(",")||'-'}`;
-            }
-        } else {
-            let sTxt = []; 
-            for (let s in o.details.stones) if (o.details.stones[s] > 0) sTxt.push(`${s}x${o.details.stones[s]}`);
-            let accTxt = (o.details.accessories && o.details.accessories.length > 0) ? o.details.accessories.join(", ") : "-";
-            if (isReceipt) {
-                body += `รายการ: กำไลหินมงคล<br>` +
-                        `หิน: ${sTxt.join(", ")}<br>` +
-                        `ข้อมือ: ${o.details.wristSize}cm<br>` +
-                        `โซ่: ${o.details.chain}<br>` +
-                        `ตัวล็อค: ${o.details.lock}<br>` +
-                        `ของตกแต่ง: ${accTxt}`;
-            } else {
-                body += `🔮 <b>หิน:</b> ${sTxt.join(", ")}<br>` +
-                        `📏 <b>ข้อมือ:</b> ${o.details.wristSize}cm<br>` +
-                        `⛓️ <b>โซ่:</b> ${o.details.chain}<br>` +
-                        `🔒 <b>ตัวล็อค:</b> ${o.details.lock}<br>` +
-                        `✨ <b>ตกแต่ง:</b> ${accTxt}`;
-            }
-        }
-        body += `<br><br><b style="font-size:1.2rem; color:var(--pink-dark)">${isReceipt ? 'ยอดรวม:' : '💰 รวม:'} ${cleanPrice(o.total).toLocaleString()} ฿</b>`;
-        document.getElementById("rc-date").innerText = "วันที่: " + o.date;
-        document.getElementById("modal-body").innerHTML = body;
-        document.getElementById("receipt-extras").style.display = isReceipt ? "block" : "none";
-        document.getElementById("receiptModal").style.display = "block";
+    function download() {
+        const link = document.createElement('a');
+        link.download = 'staggered-runes.png';
+        link.href = cvs.toDataURL('image/png');
+        link.click();
     }
 
-    function renderSummary() {
-        const total = orders.reduce((s, o) => s + cleanPrice(o.total), 0);
-        const fSale = orders.filter(o => o.type === 'ดอกไม้').reduce((s, o) => s + cleanPrice(o.total), 0);
-        const bSale = orders.filter(o => o.type === 'กำไล').reduce((s, o) => s + cleanPrice(o.total), 0);
-        const cost = costs.reduce((s, c) => s + (Number(c.amount) || 0), 0);
-        document.getElementById("stat-sale").innerText = total.toLocaleString();
-        document.getElementById("stat-flower-sale").innerText = fSale.toLocaleString();
-        document.getElementById("stat-bracelet-sale").innerText = bSale.toLocaleString();
-        document.getElementById("stat-cost").innerText = cost.toLocaleString();
-        document.getElementById("stat-profit").innerText = (total - cost).toLocaleString();
-        document.getElementById("cost-history-body").innerHTML = [...costs].reverse().map((c, i) => 
-            `<tr><td>${c.date}</td><td>${c.desc}</td><td>${Number(c.amount).toLocaleString()}</td><td><button onclick="deleteCost(${costs.length-1-i})" style="border:none; color:red; background:none; cursor: pointer;">ลบ</button></td></tr>`
-        ).join("");
-    }
-
-    function updatePendingNav() {
-        const p = orders.filter(o => !o.status).length;
-        document.getElementById("nav-pending").innerText = p > 0 ? `(${p})` : "";
-    }
-
-    function toggleStatus(i) { orders[i].status = !orders[i].status; updateStore(); }
-    function togglePaid(i) { orders[i].paid = !orders[i].paid; updateStore(); }
-    function deleteOrder(i) { if(confirm("ลบออเดอร์นี้?")) { orders.splice(i, 1); updateStore(); } }
-    function addCost() { 
-        const d = document.getElementById("cost-desc").value, a = document.getElementById("cost-amount").value;
-        if(!a) return; costs.push({ desc: d||"ทั่วไป", amount: a, date: new Date().toLocaleDateString('th-TH') });
-        localStorage.setItem("metist_costs", JSON.stringify(costs)); renderSummary();
-        document.getElementById("cost-desc").value = ""; document.getElementById("cost-amount").value = "";
-    }
-    function deleteCost(i) { costs.splice(i,1); localStorage.setItem("metist_costs", JSON.stringify(costs)); renderSummary(); }
-    function updateStore() { localStorage.setItem("metist_orders", JSON.stringify(orders)); renderOrderList(); updatePendingNav(); }
-    function closeModal() { document.getElementById("receiptModal").style.display = "none"; }
-    
-    function exportData() {
-        const blob = new Blob([JSON.stringify({ orders, costs })], { type: "application/json" });
-        const a = document.createElement("a"); a.href = URL.createObjectURL(blob); a.download = `METIST_Backup.json`; a.click();
-    }
-    function importData(e) {
-        const reader = new FileReader(); reader.onload = (ev) => {
-            const data = JSON.parse(ev.target.result);
-            if (confirm("นำเข้าข้อมูล?")) { localStorage.setItem("metist_orders", JSON.stringify(data.orders)); localStorage.setItem("metist_costs", JSON.stringify(data.costs)); location.reload(); }
-        }; reader.readAsText(e.target.files[0]);
-    }
-
-    document.getElementById("paper-grid").innerHTML = ["ดำ", "ขาว", "ชมพู", "แดง"].map(c => `<button class="square-btn" style="background:${colors[c]}; color:${c==='ขาว'?'#555':'#fff'}" onclick="selectedPapers.push('${c}'); document.getElementById('paperChoice').innerText='เลือก: '+selectedPapers.join(',')">${c}</button>`).join("");
-    
-    // --- จุดที่แก้ไข: เพิ่มปุ่มโบว์ ชมพูแก้ว และ แดงแก้ว ---
-    document.getElementById("bow-grid").innerHTML = ["แดง", "ขาว", "ชมพู", "น้ำเงิน", "ม่วง", "ชมพูแก้ว", "แดงแก้ว"].map(c => `<button class="square-btn" style="background:${colors[c]}; color:${c==='ขาว'?'#555':'#fff'}" onclick="selectedBows.push('${c}'); document.getElementById('bowChoice').innerText='เลือก: '+selectedBows.join(',')">${c}</button>`).join("");
-    
-    document.getElementById("extra-grid").innerHTML = Object.keys(extraPrice).map(e => `<button class="square-btn" style="background:#f2b5d4; color:#5a3d45;" onclick="selectedExtras['${e}']=(selectedExtras['${e}']||0)+1; calcTotal()">${e}+${extraPrice[e]}</button>`).join("");
-
-    renderFlowers();
-    updatePendingNav();
+    draw(); // รันครั้งแรก
 </script>
 
 </body>
