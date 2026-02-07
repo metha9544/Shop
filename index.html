@@ -51,9 +51,26 @@
             padding: 18px; 
             margin-bottom: 15px; 
             box-shadow: 0 8px 20px rgba(212, 131, 152, 0.12);
+            position: relative; /* สำหรับวางปุ่มล้างที่มุมขวา */
         }
         h2 { font-size: 1.1rem; margin-top: 0; margin-bottom: 12px; }
         
+        /* สไตล์ปุ่มรีเซ็ตเล็กๆ มุมขวา */
+        .btn-reset-mini {
+            position: absolute;
+            top: 15px;
+            right: 15px;
+            background: #eee;
+            color: #888;
+            border: none;
+            border-radius: 8px;
+            padding: 4px 8px;
+            font-size: 10px;
+            font-weight: bold;
+            cursor: pointer;
+        }
+        .btn-reset-mini:active { background: #ddd; }
+
         .input-row { display: flex; gap: 8px; align-items: center; margin-bottom: 8px; }
         input { 
             width: 100%; 
@@ -127,6 +144,7 @@
     </div>
     <div class="card">
         <h2>🌹 สีดอกไม้</h2>
+        <button class="btn-reset-mini" onclick="resetPart('flowers')">ล้าง</button>
         <div class="type-selector">
             <label><input type="radio" name="flowerType" value="กริตเตอร์" checked onchange="renderFlowers()"> สีกริตเตอร์</label>
             <label><input type="radio" name="flowerType" value="พื้น" onchange="renderFlowers()"> สีพื้น</label>
@@ -136,23 +154,26 @@
     </div>
     <div class="card">
         <h2>📦 กระดาษห่อ</h2>
+        <button class="btn-reset-mini" onclick="resetPart('papers')">ล้าง</button>
         <div class="grid-options" id="paper-grid"></div>
         <div id="paperChoice" style="margin-top:8px; font-size:12px; font-weight:bold; color:var(--pink-dark)">เลือก: -</div>
     </div>
     <div class="card">
         <h2>🎀 โบว์</h2>
+        <button class="btn-reset-mini" onclick="resetPart('bows')">ล้าง</button>
         <div class="grid-options" id="bow-grid"></div>
         <div id="bowChoice" style="margin-top:8px; font-size:12px; font-weight:bold; color:var(--pink-dark)">เลือก: -</div>
     </div>
     <div class="card">
         <h2>✨ ของตกแต่ง</h2>
+        <button class="btn-reset-mini" onclick="resetPart('extras')">ล้าง</button>
         <div class="grid-options" id="extra-grid"></div>
         <div id="extraChoice" style="margin-top:8px; font-size:12px; font-weight:bold; color:var(--pink-dark)">เลือก: -</div>
     </div>
     <div class="card" style="text-align:center; background: #fff0f3; border: 2px dashed var(--pink);">
         <h2 id="summary-text" style="margin-bottom:0;">ราคารวม: 0 บาท</h2>
     </div>
-    <button onclick="saveOrder('ดอกไม้')" style="width:100%; background:var(--pink-dark); color:white; padding:15px; border:none; border-radius:18px; font-size:18px; font-weight:bold; cursor:pointer; margin-top:10px;">บันทึกออเดอร์</button>
+    <button id="btn-save-flower" onclick="saveOrder('ดอกไม้')" style="width:100%; background:var(--pink-dark); color:white; padding:15px; border:none; border-radius:18px; font-size:18px; font-weight:bold; cursor:pointer; margin-top:10px;">บันทึกออเดอร์</button>
 </div>
 
 <div id="page-bracelet" class="page">
@@ -162,6 +183,7 @@
     </div>
     <div class="card">
         <h2>🔮 เลือกหิน (Lucky Stone)</h2>
+        <button class="btn-reset-mini" onclick="resetBracelet()">ล้าง</button>
         <div class="flower-flex-container">
             <div class="color-item" onclick="addStone('Rose Quartz')"><div class="color-btn" style="background: #eec9d2;"></div><div class="count">Rose Quartz</div></div>
             <div class="color-item" onclick="addStone('Jadiete')"><div class="color-btn" style="background: #a8e6cf;"></div><div class="count">Jadiete</div></div>
@@ -171,7 +193,6 @@
             <div class="color-item" onclick="addStone('Unakite')"><div class="color-btn" style="background: #9ab973;"></div><div class="count">Unakite</div></div>
         </div>
         <div id="stoneChoice" style="margin-top:8px; font-size:12px; font-weight:bold; color:var(--pink-dark)">เลือกหิน: -</div>
-        <button onclick="resetBracelet()" style="font-size:10px; margin-top:5px; border:none; background:#eee; padding:4px 8px; border-radius:5px;">ล้างข้อมูลกำไล</button>
     </div>
     <div class="card">
         <h2>⛓️ รูปแบบโซ่ (Chain)</h2>
@@ -209,7 +230,7 @@
     <div class="card" style="text-align:center; background: #fdf2f7; border: 2px dashed var(--pink-dark);">
         <h2 id="br-summary-text" style="margin-bottom:0;">ราคารวม: 59 บาท</h2>
     </div>
-    <button onclick="saveOrder('กำไล')" style="width:100%; background:var(--pink-dark); color:white; padding:15px; border:none; border-radius:18px; font-size:18px; font-weight:bold; cursor:pointer; margin-top:10px;">บันทึกออเดอร์กำไล</button>
+    <button id="btn-save-br" onclick="saveOrder('กำไล')" style="width:100%; background:var(--pink-dark); color:white; padding:15px; border:none; border-radius:18px; font-size:18px; font-weight:bold; cursor:pointer; margin-top:10px;">บันทึกออเดอร์กำไล</button>
 </div>
 
 <div id="page-orders" class="page">
@@ -307,6 +328,7 @@
 <script>
     let orders = JSON.parse(localStorage.getItem("metist_orders") || "[]");
     let costs = JSON.parse(localStorage.getItem("metist_costs") || "[]");
+    let orderBeingEdited = null;
 
     const colors = { แดง: "#e63946", ขาว: "#ffffff", ชมพู: "#f7b2cc", น้ำเงิน: "#457b9d", ม่วง: "#9b5de5", ดำ: "#333333", ชมพูแก้ว: "#ff007f", แดงแก้ว: "#b91d1d" };
     const extraPrice = { ผีเสื้อ: 5, มงกุฎ: 10, ไฟLED: 25, ไข่มุก: 0, ขอบลูกไม้: 0, ขอบมุก: 0, การ์ด: 0 };
@@ -319,6 +341,24 @@
 
     const cleanPrice = (val) => typeof val === 'number' ? val : parseFloat(String(val).replace(/[^0-9.]/g, '')) || 0;
 
+    // --- ฟังก์ชันรีเซ็ตแยกตามส่วน ---
+    function resetPart(part) {
+        if (part === 'flowers') {
+            currentFlowerData = { "พื้น": {}, "กริตเตอร์": {} };
+            renderFlowers();
+        } else if (part === 'papers') {
+            selectedPapers = [];
+            document.getElementById('paperChoice').innerText = "เลือก: -";
+        } else if (part === 'bows') {
+            selectedBows = [];
+            document.getElementById('bowChoice').innerText = "เลือก: -";
+        } else if (part === 'extras') {
+            selectedExtras = {};
+            document.getElementById('extraChoice').innerText = "เลือก: -";
+        }
+        calcTotal();
+    }
+
     function switchPage(pageId) {
         document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
         document.querySelectorAll('.nav-menu button').forEach(b => b.classList.remove('active'));
@@ -329,6 +369,7 @@
         updatePendingNav();
     }
 
+    // --- Flower Functions ---
     function renderFlowers() {
         const flowerList = ["แดง", "ขาว", "ชมพู", "น้ำเงิน", "ม่วง"];
         document.getElementById("flower-grid").innerHTML = flowerList.map(c => `
@@ -359,6 +400,7 @@
         return total;
     }
 
+    // --- Bracelet Functions ---
     function addStone(name) { brData.stones[name] = (brData.stones[name] || 0) + 1; renderStoneList(); calcBrTotal(); }
     function renderStoneList() {
         let sel = []; for (let s in brData.stones) { if (brData.stones[s] > 0) sel.push(`${s}x${brData.stones[s]}`); }
@@ -387,15 +429,17 @@
         document.getElementById('stoneChoice').innerText = "เลือกหิน: -"; document.getElementById('chainChoice').innerText = "เลือกโซ่: -";
         document.getElementById('lockChoice').innerText = "เลือกตัวล็อค: -"; document.getElementById('accList').innerText = "รายการ: -";
         document.getElementById('wrist-size').value = ""; document.getElementById('ship-br').value = ""; calcBrTotal();
+        document.getElementById("btn-save-br").innerText = "บันทึกออเดอร์กำไล";
     }
 
+    // --- Order Logic ---
     function saveOrder(productType) {
         let name, total, details, shipping;
         if(productType === 'ดอกไม้') {
             name = document.getElementById("customer").value;
             shipping = Number(document.getElementById("ship-flower").value || 0);
             total = calcTotal();
-            details = { flowers: JSON.parse(JSON.stringify(currentFlowerData)), paper: selectedPapers.join(", "), bow: selectedBows.join(", "), extras: {...selectedExtras} };
+            details = { flowers: JSON.parse(JSON.stringify(currentFlowerData)), paper: selectedPapers.join(", "), bow: selectedBows.join(", "), extras: {...selectedExtras}, basePrice: document.getElementById("basePrice").value };
         } else {
             name = document.getElementById("customer-br").value;
             shipping = Number(document.getElementById("ship-br").value || 0);
@@ -403,142 +447,111 @@
             brData.wristSize = document.getElementById('wrist-size').value;
             details = JSON.parse(JSON.stringify(brData));
         }
+
         if(!name) { alert("กรุณาใส่ชื่อลูกค้า"); return; }
-        orders.push({ 
-            id: Date.now(), name, type: productType, total, shipping, details, 
-            date: new Date().toLocaleDateString('th-TH'), status: false, paid: false, deposit: 0 
-        });
-        localStorage.setItem("metist_orders", JSON.stringify(orders));
-        
+
+        if (orderBeingEdited !== null) {
+            orders[orderBeingEdited] = { ...orders[orderBeingEdited], name, total, shipping, details };
+            orderBeingEdited = null;
+        } else {
+            orders.push({ id: Date.now(), name, type: productType, total, shipping, details, date: new Date().toLocaleDateString('th-TH'), status: false, paid: false, deposit: 0 });
+        }
+
+        updateStore();
         if(productType === 'ดอกไม้') {
-            document.getElementById("customer").value = ""; 
-            document.getElementById("ship-flower").value = "";
-            currentFlowerData = { "พื้น": {}, "กริตเตอร์": {} };
-            selectedPapers = []; selectedBows = []; selectedExtras = {};
-            document.getElementById("paperChoice").innerText = "เลือก: -";
-            document.getElementById("bowChoice").innerText = "เลือก: -";
-            document.getElementById("extraChoice").innerText = "เลือก: -";
-            document.getElementById("basePrice").value = ""; renderFlowers(); calcTotal();
+            document.getElementById("customer").value = ""; document.getElementById("ship-flower").value = "";
+            resetPart('flowers'); resetPart('papers'); resetPart('bows'); resetPart('extras');
+            document.getElementById("basePrice").value = ""; 
+            document.getElementById("btn-save-flower").innerText = "บันทึกออเดอร์";
         } else {
             resetBracelet(); document.getElementById("customer-br").value = "";
         }
-        document.getElementById("searchOrder").value = "";
         switchPage('orders');
+    }
+
+    function editOrder(index) {
+        const o = orders[index];
+        orderBeingEdited = index;
+        if (o.type === 'ดอกไม้') {
+            switchPage('flower');
+            document.getElementById("customer").value = o.name;
+            document.getElementById("ship-flower").value = o.shipping;
+            document.getElementById("basePrice").value = o.details.basePrice || "";
+            currentFlowerData = JSON.parse(JSON.stringify(o.details.flowers));
+            selectedPapers = o.details.paper ? o.details.paper.split(",").filter(x => x.trim() !== "") : [];
+            selectedBows = o.details.bow ? o.details.bow.split(",").filter(x => x.trim() !== "") : [];
+            selectedExtras = {...o.details.extras};
+            document.getElementById("paperChoice").innerText = "เลือก: " + (o.details.paper || "-");
+            document.getElementById("bowChoice").innerText = "เลือก: " + (o.details.bow || "-");
+            renderFlowers(); renderExtraChoice(); calcTotal();
+            document.getElementById("btn-save-flower").innerText = "อัปเดตออเดอร์ (แก้ไข)";
+        } else {
+            switchPage('bracelet');
+            document.getElementById("customer-br").value = o.name;
+            document.getElementById("ship-br").value = o.shipping;
+            document.getElementById("wrist-size").value = o.details.wristSize;
+            brData = JSON.parse(JSON.stringify(o.details));
+            renderStoneList();
+            document.getElementById('chainChoice').innerText = "เลือก: " + (brData.chain || "-");
+            document.getElementById('lockChoice').innerText = "เลือก: " + (brData.lock || "-");
+            document.getElementById('accList').innerText = "รายการ: " + (brData.accessories.join(",") || "-");
+            calcBrTotal();
+            document.getElementById("btn-save-br").innerText = "อัปเดตออเดอร์กำไล (แก้ไข)";
+        }
     }
 
     function renderOrderList() {
         const listDiv = document.getElementById("order-list");
         const search = document.getElementById("searchOrder").value.toLowerCase();
         let filtered = orders.filter(o => o.name.toLowerCase().includes(search));
-        
-        filtered.sort((a, b) => {
-            if (a.status !== b.status) return a.status ? 1 : -1;
-            return b.id - a.id;
-        });
-
+        filtered.sort((a, b) => (a.status !== b.status) ? (a.status ? 1 : -1) : (b.id - a.id));
         document.getElementById("pending-count").innerText = `รอดำเนินการ: ${orders.filter(o => !o.status).length}`;
-
         listDiv.innerHTML = filtered.map((o) => {
             const realIdx = orders.findIndex(orig => orig.id === o.id);
             const isFlower = o.type === 'ดอกไม้';
             const accent = isFlower ? '#d48398' : '#9b5de5';
             const bg = isFlower ? '#fff5f8' : '#f9f5ff';
-            
-            // คำนวณยอด
-            const total = cleanPrice(o.total);
-            const deposit = o.deposit || 0;
-            const remaining = total - deposit;
-
-            return `
-                <div class="order-item" style="border-left: 8px solid ${accent}; background: ${bg};">
+            const total = cleanPrice(o.total), deposit = o.deposit || 0, remaining = total - deposit;
+            return `<div class="order-item" style="border-left: 8px solid ${accent}; background: ${bg};">
                     <div style="display:flex; justify-content:space-between; font-size:11px; font-weight:bold; color:${accent}">
                         <span>${isFlower ? '🌸 FLOWER' : '🔮 BRACELET'} ${o.status ? '✅' : '⏳'}</span>
                         <span style="color:gray">${o.date}</span>
                     </div>
                     <div style="margin:5px 0"><b>👤 ${o.name}</b> ${o.shipping > 0 ? `<small style="color:#ff6b6b">(ส่ง +${o.shipping})</small>` : ''}</div>
                     <div style="font-weight:bold">ยอดทั้งหมด: ${total.toLocaleString()} ฿</div>
-                    
-                    ${deposit > 0 ? `
-                        <div style="font-size:11px; color:#666;">มัดจำแล้ว: <span style="color:#51cf66; font-weight:bold;">${deposit.toLocaleString()} ฿</span></div>
-                        <div style="font-size:11px; color:#ff6b6b; margin-bottom:5px;">คงเหลือ: <b>${remaining.toLocaleString()} ฿</b></div>
-                    ` : ''}
-                    
-                    <div class="btn-group" style="margin-top:10px;">
-                        <button class="status-btn" style="background:${o.status ? '#51cf66' : '#ff6b6b'}; flex:1" onclick="toggleStatus(${realIdx})">
-                            ${o.status ? 'ทำแล้ว' : 'รอดำเนินการ'}
-                        </button>
-                        <button class="status-btn" style="background:${o.paid ? '#51cf66' : '#ff6b6b'}; flex:1" onclick="togglePaid(${realIdx})">
-                            ${o.paid ? 'จ่ายครบแล้ว' : 'ยังไม่ครบ'}
-                        </button>
-                    </div>
-                    <div class="btn-group">
-                        <button class="status-btn" style="background:white; color:${accent}; border:1px solid ${accent}; flex:1" onclick="setDeposit(${realIdx})">มัดจำ</button>
-                        <button class="status-btn" style="background:white; color:${accent}; border:1px solid ${accent}; flex:1" onclick="openPopup(${realIdx}, 'order')">รายละเอียด</button>
-                        <button class="status-btn" style="background:white; color:${accent}; border:1px solid ${accent}; flex:1" onclick="openPopup(${realIdx}, 'receipt')">ใบเสร็จ</button>
-                        <button class="status-btn" style="background:#eee; color:#999; width:35px" onclick="deleteOrder(${realIdx})">🗑️</button>
-                    </div>
+                    ${deposit > 0 ? `<div style="font-size:11px; color:#666;">มัดจำแล้ว: <span style="color:#51cf66; font-weight:bold;">${deposit.toLocaleString()} ฿</span></div><div style="font-size:11px; color:#ff6b6b; margin-bottom:5px;">คงเหลือ: <b>${remaining.toLocaleString()} ฿</b></div>` : ''}
+                    <div class="btn-group" style="margin-top:10px;"><button class="status-btn" style="background:${o.status ? '#51cf66' : '#ff6b6b'}; flex:1" onclick="toggleStatus(${realIdx})">${o.status ? 'ทำแล้ว' : 'รอดำเนินการ'}</button><button class="status-btn" style="background:${o.paid ? '#51cf66' : '#ff6b6b'}; flex:1" onclick="togglePaid(${realIdx})">${o.paid ? 'จ่ายครบแล้ว' : 'ยังไม่ครบ'}</button></div>
+                    <div class="btn-group"><button class="status-btn" style="background:white; color:${accent}; border:1px solid ${accent}; flex:1" onclick="setDeposit(${realIdx})">มัดจำ</button><button class="status-btn" style="background:white; color:${accent}; border:1px solid ${accent}; flex:1" onclick="openPopup(${realIdx}, 'order')">รายละเอียด</button><button class="status-btn" style="background:white; color:${accent}; border:1px solid ${accent}; flex:1" onclick="openPopup(${realIdx}, 'receipt')">ใบเสร็จ</button></div>
+                    <div class="btn-group"><button class="status-btn" style="background:white; color:${accent}; border:1px solid ${accent}; flex:1" onclick="editOrder(${realIdx})">แก้ไขออเดอร์</button><button class="status-btn" style="background:#eee; color:#999; width:35px" onclick="deleteOrder(${realIdx})">🗑️</button></div>
                 </div>`;
         }).join("");
     }
 
     function openPopup(i, mode) {
-        const o = orders[i]; 
-        const isReceipt = mode === 'receipt';
-        const total = cleanPrice(o.total);
-        const deposit = o.deposit || 0;
-        const remaining = total - deposit;
-        
+        const o = orders[i]; const isReceipt = mode === 'receipt';
+        const total = cleanPrice(o.total), deposit = o.deposit || 0, remaining = total - deposit;
         document.getElementById("receipt-title").innerText = isReceipt ? "METIST" : "🌸 METIST ✨";
-
         let body = isReceipt ? `ลูกค้า: คุณ ${o.name}<br>` : `👤 <b>ลูกค้า:</b> ${o.name}<br>`;
-        
         if (o.type === 'ดอกไม้') {
-            let fTxt = [];
-            for (let t in o.details.flowers) {
-                for (let c in o.details.flowers[t]) {
-                    if (o.details.flowers[t][c] > 0) fTxt.push(`${c}${t==='กริตเตอร์'?'(กริต)':''} x${o.details.flowers[t][c]}`);
-                }
-            }
+            let fTxt = []; for (let t in o.details.flowers) { for (let c in o.details.flowers[t]) if (o.details.flowers[t][c] > 0) fTxt.push(`${c}${t==='กริตเตอร์'?'(กริต)':''} x${o.details.flowers[t][c]}`); }
             let exTxt = Object.keys(o.details.extras).filter(ex => o.details.extras[ex] > 0);
-            body += isReceipt ? `สีดอกไม้: ${fTxt.join(", ") || "-"}<br>กระดาษ: ${o.details.paper || "-"}<br>โบว์: ${o.details.bow || "-"}<br>ตกแต่ง: ${exTxt.join(", ") || "-"}` 
-                              : `🌹 <b>สีดอก:</b> ${fTxt.join(", ") || "-"}<br>📦 <b>กระดาษ:</b> ${o.details.paper || "-"}<br>🎀 <b>โบว์:</b> ${o.details.bow || "-"}<br>✨ <b>ของตกแต่ง:</b> ${exTxt.join(", ") || "-"}`;
+            body += isReceipt ? `สีดอกไม้: ${fTxt.join(", ") || "-"}<br>กระดาษ: ${o.details.paper || "-"}<br>โบว์: ${o.details.bow || "-"}<br>ตกแต่ง: ${exTxt.join(", ") || "-"}` : `🌹 <b>สีดอก:</b> ${fTxt.join(", ") || "-"}<br>📦 <b>กระดาษ:</b> ${o.details.paper || "-"}<br>🎀 <b>โบว์:</b> ${o.details.bow || "-"}<br>✨ <b>ของตกแต่ง:</b> ${exTxt.join(", ") || "-"}`;
         } else {
-            let sTxt = []; 
-            for (let s in o.details.stones) if (o.details.stones[s] > 0) sTxt.push(`${s}x${o.details.stones[s]}`);
-            let accTxt = o.details.accessories && o.details.accessories.length > 0 ? o.details.accessories.join(", ") : "-";
-            body += isReceipt ? `หิน: ${sTxt.join(", ")}<br>ข้อมือ: ${o.details.wristSize || "-"} cm<br>อะไหล่: ${accTxt}`
-                              : `🔮 <b>หิน:</b> ${sTxt.join(", ")}<br>📏 <b>ข้อมือ:</b> ${o.details.wristSize || "-"} cm<br>✨ <b>อะไหล่:</b> ${accTxt}`;
+            let sTxt = []; for (let s in o.details.stones) if (o.details.stones[s] > 0) sTxt.push(`${s}x${o.details.stones[s]}`);
+            body += isReceipt ? `หิน: ${sTxt.join(", ")}<br>ข้อมือ: ${o.details.wristSize || "-"} cm<br>อะไหล่: ${o.details.accessories.join(", ") || "-"}` : `🔮 <b>หิน:</b> ${sTxt.join(", ")}<br>📏 <b>ข้อมือ:</b> ${o.details.wristSize || "-"} cm<br>✨ <b>อะไหล่:</b> ${o.details.accessories.join(", ") || "-"}`;
         }
-
         if (o.shipping > 0) body += `<br>${isReceipt ? 'ค่าจัดส่ง:' : '🚚 <b>ค่าจัดส่ง:</b>'} ${o.shipping} ฿`;
-
         body += `<br><br><b style="font-size:1.1rem; color:var(--pink-dark)">ยอดรวม: ${total.toLocaleString()} ฿</b>`;
-        
-        // แสดงมัดจำและยอดคงเหลือ เฉพาะกรณีที่มีการมัดจำ (> 0)
-        if (deposit > 0) {
-            body += `<br>${isReceipt ? 'มัดจำแล้ว:' : '<span style="color:#51cf66;">มัดจำแล้ว:</span>'} ${deposit.toLocaleString()} ฿`;
-            if(!o.paid) body += `<br><b style="color:#ff6b6b;">คงเหลือ: ${remaining.toLocaleString()} ฿</b>`;
-        }
-        
+        if (deposit > 0) { body += `<br>${isReceipt ? 'มัดจำแล้ว:' : '<span style="color:#51cf66;">มัดจำแล้ว:</span>'} ${deposit.toLocaleString()} ฿`; if(!o.paid) body += `<br><b style="color:#ff6b6b;">คงเหลือ: ${remaining.toLocaleString()} ฿</b>`; }
         document.getElementById("rc-date").innerText = "วันที่: " + o.date;
         document.getElementById("modal-body").innerHTML = body;
         document.getElementById("receipt-extras").style.display = isReceipt ? "block" : "none";
         document.getElementById("receiptModal").style.display = "block";
     }
 
-    function setDeposit(i) {
-        let amt = prompt("ระบุจำนวนเงินมัดจำ:", orders[i].deposit || 0);
-        if (amt !== null) {
-            orders[i].deposit = Number(amt);
-            updateStore();
-        }
-    }
-
     function showTaskSummary() {
         const pendingOrders = orders.filter(o => o.type === 'ดอกไม้' && !o.status);
-        let summary = {};
-        let totalFlowers = 0;
-
+        let summary = {}, totalFlowers = 0;
         pendingOrders.forEach(order => {
             const flowers = order.details.flowers;
             if (flowers) {
@@ -547,104 +560,56 @@
                         const count = flowers[type][color];
                         if (count > 0) {
                             const key = `${color} (${type})`;
-                            if (!summary[key]) {
-                                summary[key] = { count: 0, colorCode: colors[color] || '#ccc' };
-                            }
-                            summary[key].count += count;
-                            totalFlowers += count;
+                            if (!summary[key]) summary[key] = { count: 0, colorCode: colors[color] || '#ccc' };
+                            summary[key].count += count; totalFlowers += count;
                         }
                     }
                 }
             }
         });
-
         let html = `<h3 style="margin-top:0; color:var(--pink-dark);">รายการดอกไม้ที่ต้องทำ</h3>`;
-        if (totalFlowers === 0) {
-            html += `<p style="color:gray;">ไม่มีออเดอร์ดอกไม้ที่ค้างอยู่</p>`;
-        } else {
+        if (totalFlowers === 0) html += `<p style="color:gray;">ไม่มีออเดอร์ดอกไม้ที่ค้างอยู่</p>`;
+        else {
             html += `<div style="text-align:left; background:#fff5f8; padding:15px; border-radius:15px; border:1px dashed var(--pink);">`;
-            for (let key in summary) {
-                html += `
-                    <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:10px; border-bottom:1px solid #eee; padding-bottom:6px;">
-                        <div style="display:flex; align-items:center;">
-                            <div style="width:14px; height:14px; background:${summary[key].colorCode}; border-radius:50%; margin-right:10px; border:1px solid rgba(0,0,0,0.1);"></div>
-                            <span style="font-size:14px;">${key}</span>
-                        </div>
-                        <b style="color:var(--pink-dark); font-size:1.1rem;">x ${summary[key].count}</b>
-                    </div>`;
-            }
-            html += `<div style="text-align:right; margin-top:12px; font-size:16px; font-weight:bold; color:var(--text);">รวมทั้งหมด: ${totalFlowers} ดอก</div>`;
-            html += `</div>`;
+            for (let key in summary) html += `<div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:10px; border-bottom:1px solid #eee; padding-bottom:6px;"><div style="display:flex; align-items:center;"><div style="width:14px; height:14px; background:${summary[key].colorCode}; border-radius:50%; margin-right:10px; border:1px solid rgba(0,0,0,0.1);"></div><span>${key}</span></div><b style="color:var(--pink-dark); font-size:1.1rem;">x ${summary[key].count}</b></div>`;
+            html += `<div style="text-align:right; margin-top:12px; font-size:16px; font-weight:bold;">รวมทั้งหมด: ${totalFlowers} ดอก</div></div>`;
         }
-
         document.getElementById("modal-body").innerHTML = html;
-        document.getElementById("rc-date").innerText = "อัปเดต: " + new Date().toLocaleTimeString('th-TH');
-        document.getElementById("receipt-extras").style.display = "none"; 
-        document.getElementById("receiptModal").style.display = "block";
+        document.getElementById("receipt-extras").style.display = "none"; document.getElementById("receiptModal").style.display = "block";
     }
 
     function renderSummary() {
         const totalSales = orders.reduce((s, o) => s + cleanPrice(o.total), 0);
         const fSale = orders.filter(o => o.type === 'ดอกไม้').reduce((s, o) => s + cleanPrice(o.total), 0);
         const bSale = orders.filter(o => o.type === 'กำไล').reduce((s, o) => s + cleanPrice(o.total), 0);
-        
-        const getPaidAmount = (type) => orders.filter(o => o.type === type).reduce((s, o) => {
-            return s + (o.paid ? cleanPrice(o.total) : (o.deposit || 0));
-        }, 0);
-
-        const fPaid = getPaidAmount('ดอกไม้');
-        const bPaid = getPaidAmount('กำไล');
-        const fUnpaid = fSale - fPaid;
-        const bUnpaid = bSale - bPaid;
-
+        const getPaidAmount = (type) => orders.filter(o => o.type === type).reduce((s, o) => s + (o.paid ? cleanPrice(o.total) : (o.deposit || 0)), 0);
+        const fPaid = getPaidAmount('ดอกไม้'), bPaid = getPaidAmount('กำไล');
         const cost = costs.reduce((s, c) => s + (Number(c.amount) || 0), 0);
-        
         document.getElementById("stat-sale").innerText = totalSales.toLocaleString();
         document.getElementById("stat-flower-sale").innerText = fSale.toLocaleString();
         document.getElementById("stat-bracelet-sale").innerText = bSale.toLocaleString();
         document.getElementById("stat-cost").innerText = cost.toLocaleString();
         document.getElementById("stat-profit").innerText = (totalSales - cost).toLocaleString();
-
         document.getElementById("pay-flower-done").innerText = fPaid.toLocaleString();
-        document.getElementById("pay-flower-pending").innerText = fUnpaid.toLocaleString();
+        document.getElementById("pay-flower-pending").innerText = (fSale - fPaid).toLocaleString();
         document.getElementById("pay-br-done").innerText = bPaid.toLocaleString();
-        document.getElementById("pay-br-pending").innerText = bUnpaid.toLocaleString();
-
-        document.getElementById("cost-history-body").innerHTML = [...costs].reverse().map((c, i) => 
-            `<tr><td>${c.date}</td><td>${c.desc}</td><td>${Number(c.amount).toLocaleString()}</td><td><button onclick="deleteCost(${costs.length-1-i})" style="border:none; color:red; background:none; cursor: pointer;">ลบ</button></td></tr>`
-        ).join("");
+        document.getElementById("pay-br-pending").innerText = (bSale - bPaid).toLocaleString();
+        document.getElementById("cost-history-body").innerHTML = [...costs].reverse().map((c, i) => `<tr><td>${c.date}</td><td>${c.desc}</td><td>${Number(c.amount).toLocaleString()}</td><td><button onclick="deleteCost(${costs.length-1-i})" style="border:none; color:red; background:none;">ลบ</button></td></tr>`).join("");
     }
 
-    function updatePendingNav() {
-        const p = orders.filter(o => !o.status).length;
-        document.getElementById("nav-pending").innerText = p > 0 ? `(${p})` : "";
-    }
-
+    function updatePendingNav() { const p = orders.filter(o => !o.status).length; document.getElementById("nav-pending").innerText = p > 0 ? `(${p})` : ""; }
     function toggleStatus(i) { orders[i].status = !orders[i].status; updateStore(); }
     function togglePaid(i) { orders[i].paid = !orders[i].paid; updateStore(); }
     function deleteOrder(i) { if(confirm("ลบออเดอร์นี้?")) { orders.splice(i, 1); updateStore(); } }
-    function addCost() { 
-        const d = document.getElementById("cost-desc").value, a = document.getElementById("cost-amount").value;
-        if(!a) return; costs.push({ desc: d||"ทั่วไป", amount: a, date: new Date().toLocaleDateString('th-TH') });
-        localStorage.setItem("metist_costs", JSON.stringify(costs)); renderSummary();
-        document.getElementById("cost-desc").value = ""; document.getElementById("cost-amount").value = "";
-    }
-    function deleteCost(i) { costs.splice(i,1); localStorage.setItem("metist_costs", JSON.stringify(costs)); renderSummary(); }
+    function setDeposit(i) { let amt = prompt("ระบุจำนวนเงินมัดจำ:", orders[i].deposit || ""); if (amt !== null) { orders[i].deposit = Number(amt); updateStore(); } }
     function updateStore() { localStorage.setItem("metist_orders", JSON.stringify(orders)); renderOrderList(); updatePendingNav(); }
+    function addCost() { const d = document.getElementById("cost-desc").value, a = document.getElementById("cost-amount").value; if(!a) return; costs.push({ desc: d||"ทั่วไป", amount: a, date: new Date().toLocaleDateString('th-TH') }); localStorage.setItem("metist_costs", JSON.stringify(costs)); renderSummary(); document.getElementById("cost-desc").value = ""; document.getElementById("cost-amount").value = ""; }
+    function deleteCost(i) { costs.splice(i,1); localStorage.setItem("metist_costs", JSON.stringify(costs)); renderSummary(); }
     function closeModal() { document.getElementById("receiptModal").style.display = "none"; }
-    
-    function exportData() {
-        const blob = new Blob([JSON.stringify({ orders, costs })], { type: "application/json" });
-        const a = document.createElement("a"); a.href = URL.createObjectURL(blob); a.download = `METIST_Backup.json`; a.click();
-    }
-    function importData(e) {
-        const reader = new FileReader(); reader.onload = (ev) => {
-            const data = JSON.parse(ev.target.result);
-            if (confirm("นำเข้าข้อมูล?")) { localStorage.setItem("metist_orders", JSON.stringify(data.orders)); localStorage.setItem("metist_costs", JSON.stringify(data.costs)); location.reload(); }
-        }; reader.readAsText(e.target.files[0]);
-    }
+    function exportData() { const blob = new Blob([JSON.stringify({ orders, costs })], { type: "application/json" }); const a = document.createElement("a"); a.href = URL.createObjectURL(blob); a.download = `METIST_Backup.json`; a.click(); }
+    function importData(e) { const reader = new FileReader(); reader.onload = (ev) => { const data = JSON.parse(ev.target.result); if (confirm("นำเข้าข้อมูล?")) { localStorage.setItem("metist_orders", JSON.stringify(data.orders)); localStorage.setItem("metist_costs", JSON.stringify(data.costs)); location.reload(); } }; reader.readAsText(e.target.files[0]); }
 
-    // Init UI Elements
+    // --- Init UI Grid ---
     document.getElementById("paper-grid").innerHTML = ["ดำ", "ขาว", "ชมพู", "แดง"].map(c => `<button class="square-btn" style="background:${colors[c]}; color:${c==='ขาว'?'#555':'#fff'}" onclick="selectedPapers.push('${c}'); document.getElementById('paperChoice').innerText='เลือก: '+selectedPapers.join(',')">${c}</button>`).join("");
     document.getElementById("bow-grid").innerHTML = ["แดง", "ขาว", "ชมพู", "น้ำเงิน", "ม่วง", "ชมพูแก้ว", "แดงแก้ว"].map(c => `<button class="square-btn" style="background:${colors[c]}; color:${c==='ขาว'?'#555':'#fff'}" onclick="selectedBows.push('${c}'); document.getElementById('bowChoice').innerText='เลือก: '+selectedBows.join(',')">${c}</button>`).join("");
     document.getElementById("extra-grid").innerHTML = Object.keys(extraPrice).map(e => `<button class="square-btn" style="background:#f2b5d4; color:#5a3d45;" onclick="selectedExtras['${e}']=(selectedExtras['${e}']||0)+1; calcTotal(); renderExtraChoice();">${e}+${extraPrice[e]}</button>`).join("");
@@ -652,6 +617,5 @@
     renderFlowers();
     updatePendingNav();
 </script>
-
 </body>
 </html>
