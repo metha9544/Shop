@@ -527,11 +527,15 @@
         }).join("");
     }
 
-    function openPopup(i, mode) {
+        function openPopup(i, mode) {
         const o = orders[i]; const isReceipt = mode === 'receipt';
         const total = cleanPrice(o.total), deposit = o.deposit || 0, remaining = total - deposit;
+        const shipping = Number(o.shipping || 0);
+        const productSubtotal = total - shipping; 
+
         document.getElementById("receipt-title").innerText = isReceipt ? "METIST" : "🌸 METIST ✨";
         let body = isReceipt ? `ลูกค้า: คุณ ${o.name}<br>` : `👤 <b>ลูกค้า:</b> ${o.name}<br>`;
+        
         if (o.type === 'ดอกไม้') {
             let fTxt = []; for (let t in o.details.flowers) { for (let c in o.details.flowers[t]) if (o.details.flowers[t][c] > 0) fTxt.push(`${c}${t==='กริตเตอร์'?'(กริต)':''} x${o.details.flowers[t][c]}`); }
             let exTxt = Object.keys(o.details.extras).filter(ex => o.details.extras[ex] > 0);
@@ -540,42 +544,27 @@
             let sTxt = []; for (let s in o.details.stones) if (o.details.stones[s] > 0) sTxt.push(`${s}x${o.details.stones[s]}`);
             body += isReceipt ? `หิน: ${sTxt.join(", ")}<br>ข้อมือ: ${o.details.wristSize || "-"} cm<br>อะไหล่: ${o.details.accessories.join(", ") || "-"}` : `🔮 <b>หิน:</b> ${sTxt.join(", ")}<br>📏 <b>ข้อมือ:</b> ${o.details.wristSize || "-"} cm<br>✨ <b>อะไหล่:</b> ${o.details.accessories.join(", ") || "-"}`;
         }
-        if (o.shipping > 0) body += `<br>${isReceipt ? 'ค่าจัดส่ง:' : '🚚 <b>ค่าจัดส่ง:</b>'} ${o.shipping} ฿`;
-        body += `<br><br><b style="font-size:1.1rem; color:var(--pink-dark)">ยอดรวม: ${total.toLocaleString()} ฿</b>`;
-        if (deposit > 0) { body += `<br>${isReceipt ? 'มัดจำแล้ว:' : '<span style="color:#51cf66;">มัดจำแล้ว:</span>'} ${deposit.toLocaleString()} ฿`; if(!o.paid) body += `<br><b style="color:#ff6b6b;">คงเหลือ: ${remaining.toLocaleString()} ฿</b>`; }
+
+        // เพิ่มช่องว่างเล็กน้อยก่อนเข้าส่วนราคา
+        body += `<br>`;
+
+        // แสดงยอดสินค้าแยกเมื่อมีค่าส่ง
+        if (shipping > 0) {
+            body += `<br>${isReceipt ? 'ค่าดอกไม้:' : '💐 <b>ราคาสินค้า:</b>'} ${productSubtotal.toLocaleString()} ฿`;
+            body += `<br>${isReceipt ? 'ค่าจัดส่ง:' : '🚚 <b>ค่าจัดส่ง:</b>'} ${shipping.toLocaleString()} ฿`;
+        }
+
+        body += `<br><b style="font-size:1.1rem; color:var(--pink-dark)">ยอดรวมสุทธิ: ${total.toLocaleString()} ฿</b>`;
+        
+        if (deposit > 0) { 
+            body += `<br>${isReceipt ? 'มัดจำแล้ว:' : '<span style="color:#51cf66;">มัดจำแล้ว:</span>'} ${deposit.toLocaleString()} ฿`; 
+            if(!o.paid) body += `<br><b style="color:#ff6b6b;">คงเหลือ: ${remaining.toLocaleString()} ฿</b>`; 
+        }
+        
         document.getElementById("rc-date").innerText = "วันที่: " + o.date;
         document.getElementById("modal-body").innerHTML = body;
         document.getElementById("receipt-extras").style.display = isReceipt ? "block" : "none";
         document.getElementById("receiptModal").style.display = "block";
-    }
-
-    function showTaskSummary() {
-        const pendingOrders = orders.filter(o => o.type === 'ดอกไม้' && !o.status);
-        let summary = {}, totalFlowers = 0;
-        pendingOrders.forEach(order => {
-            const flowers = order.details.flowers;
-            if (flowers) {
-                for (let type in flowers) {
-                    for (let color in flowers[type]) {
-                        const count = flowers[type][color];
-                        if (count > 0) {
-                            const key = `${color} (${type})`;
-                            if (!summary[key]) summary[key] = { count: 0, colorCode: colors[color] || '#ccc' };
-                            summary[key].count += count; totalFlowers += count;
-                        }
-                    }
-                }
-            }
-        });
-        let html = `<h3 style="margin-top:0; color:var(--pink-dark);">รายการดอกไม้ที่ต้องทำ</h3>`;
-        if (totalFlowers === 0) html += `<p style="color:gray;">ไม่มีออเดอร์ดอกไม้ที่ค้างอยู่</p>`;
-        else {
-            html += `<div style="text-align:left; background:#fff5f8; padding:15px; border-radius:15px; border:1px dashed var(--pink);">`;
-            for (let key in summary) html += `<div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:10px; border-bottom:1px solid #eee; padding-bottom:6px;"><div style="display:flex; align-items:center;"><div style="width:14px; height:14px; background:${summary[key].colorCode}; border-radius:50%; margin-right:10px; border:1px solid rgba(0,0,0,0.1);"></div><span>${key}</span></div><b style="color:var(--pink-dark); font-size:1.1rem;">x ${summary[key].count}</b></div>`;
-            html += `<div style="text-align:right; margin-top:12px; font-size:16px; font-weight:bold;">รวมทั้งหมด: ${totalFlowers} ดอก</div></div>`;
-        }
-        document.getElementById("modal-body").innerHTML = html;
-        document.getElementById("receipt-extras").style.display = "none"; document.getElementById("receiptModal").style.display = "block";
     }
 
     function renderSummary() {
