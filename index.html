@@ -597,7 +597,67 @@
     function closeModal() { document.getElementById("receiptModal").style.display = "none"; }
     function exportData() { const blob = new Blob([JSON.stringify({ orders, costs })], { type: "application/json" }); const a = document.createElement("a"); a.href = URL.createObjectURL(blob); a.download = `METIST_Backup.json`; a.click(); }
     function importData(e) { const reader = new FileReader(); reader.onload = (ev) => { const data = JSON.parse(ev.target.result); if (confirm("นำเข้าข้อมูล?")) { localStorage.setItem("metist_orders", JSON.stringify(data.orders)); localStorage.setItem("metist_costs", JSON.stringify(data.costs)); location.reload(); } }; reader.readAsText(e.target.files[0]); }
+// --- ฟังก์ชันสรุปงานที่ต้องทำ (Task Summary) ---
+    function showTaskSummary() {
+    const pendingOrders = orders.filter(o => !o.status);
+    if (pendingOrders.length === 0) {
+        alert("เย้! ไม่มีออเดอร์ค้างทำในขณะนี้ 🌸");
+        return;
+    }
 
+    let flowerSummary = {};
+    let stoneSummary = {};
+    let totalPending = pendingOrders.length;
+
+    pendingOrders.forEach(o => {
+        if (o.type === 'ดอกไม้') {
+            const flowers = o.details.flowers;
+            for (let type in flowers) {
+                for (let color in flowers[type]) {
+                    if (flowers[type][color] > 0) {
+                        const key = `${color} (${type})`;
+                        flowerSummary[key] = (flowerSummary[key] || 0) + flowers[type][color];
+                    }
+                }
+            }
+        } else if (o.type === 'กำไล') {
+            const stones = o.details.stones;
+            for (let stone in stones) {
+                if (stones[stone] > 0) {
+                    stoneSummary[stone] = (stoneSummary[stone] || 0) + stones[stone];
+                }
+            }
+        }
+    });
+
+    // สร้างเนื้อหาที่จะแสดงใน Modal
+    let summaryHtml = `<div style="text-align:left; font-size:14px;">`;
+    summaryHtml += `<p><b>📦 ออเดอร์ค้างทำทั้งหมด: ${totalPending} รายการ</b></p><hr>`;
+
+    if (Object.keys(flowerSummary).length > 0) {
+        summaryHtml += `<p><b>🌹 ดอกไม้ที่ต้องเตรียม:</b></p><ul>`;
+        for (let f in flowerSummary) {
+            summaryHtml += `<li>${f}: ${flowerSummary[f]} ดอก</li>`;
+        }
+        summaryHtml += `</ul>`;
+    }
+
+    if (Object.keys(stoneSummary).length > 0) {
+        summaryHtml += `<p><b>🔮 หินที่ต้องใช้:</b></p><ul>`;
+        for (let s in stoneSummary) {
+            summaryHtml += `<li>${s}: ${stoneSummary[s]} เม็ด</li>`;
+        }
+        summaryHtml += `</ul>`;
+    }
+    summaryHtml += `</div>`;
+
+    // ใช้ Modal เดิมที่มีอยู่แสดงผล
+    document.getElementById("receipt-title").innerText = "📋 สรุปสิ่งที่ต้องเตรียม";
+    document.getElementById("rc-date").innerText = "ข้อมูล ณ วันที่: " + new Date().toLocaleDateString('th-TH');
+    document.getElementById("modal-body").innerHTML = summaryHtml;
+    document.getElementById("receipt-extras").style.display = "none"; // ปิด QR Code
+    document.getElementById("receiptModal").style.display = "block";
+}
     // --- Init UI Grid ---
     document.getElementById("paper-grid").innerHTML = ["ดำ", "ขาว", "ชมพู", "แดง"].map(c => `<button class="square-btn" style="background:${colors[c]}; color:${c==='ขาว'?'#555':'#fff'}" onclick="selectedPapers.push('${c}'); document.getElementById('paperChoice').innerText='เลือก: '+selectedPapers.join(',')">${c}</button>`).join("");
     document.getElementById("bow-grid").innerHTML = ["แดง", "ขาว", "ชมพู", "น้ำเงิน", "ม่วง", "ชมพูแก้ว", "แดงแก้ว"].map(c => `<button class="square-btn" style="background:${colors[c]}; color:${c==='ขาว'?'#555':'#fff'}" onclick="selectedBows.push('${c}'); document.getElementById('bowChoice').innerText='เลือก: '+selectedBows.join(',')">${c}</button>`).join("");
