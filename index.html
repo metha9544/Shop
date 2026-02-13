@@ -11,6 +11,8 @@
     <meta name="apple-mobile-web-app-status-bar-style" content="default">
     <meta name="apple-mobile-web-app-title" content="METIST">
 
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
+
     <style>
         :root {
             --pink: #f8c8dc;
@@ -51,11 +53,10 @@
             padding: 18px; 
             margin-bottom: 15px; 
             box-shadow: 0 8px 20px rgba(212, 131, 152, 0.12);
-            position: relative; /* สำหรับวางปุ่มล้างที่มุมขวา */
+            position: relative;
         }
         h2 { font-size: 1.1rem; margin-top: 0; margin-bottom: 12px; }
         
-        /* สไตล์ปุ่มรีเซ็ตเล็กๆ มุมขวา */
         .btn-reset-mini {
             position: absolute;
             top: 15px;
@@ -119,8 +120,31 @@
 
         .modal { display: none; position: fixed; z-index: 1000; left: 0; top: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.6); overflow-y: auto; }
         .modal-content { background: white; width: 85%; max-width: 320px; margin: 40px auto; padding: 20px; border-radius: 25px; text-align: center; }
-        .receipt-border { border: 2px dashed var(--pink-dark); border-radius: 20px; padding: 20px; }
-        .receipt-details { text-align: left; font-size: 0.9rem; line-height: 1.7; margin: 15px 0; border-top: 1px solid #f2f2f2; padding-top: 10px; }
+        
+        /* แก้ไขจัดกึ่งกลางใบเสร็จ */
+        .receipt-border { 
+            border: 2px dashed var(--pink-dark); 
+            border-radius: 20px; 
+            padding: 20px; 
+            width: 100%; 
+            box-sizing: border-box; 
+            margin: 0 auto;
+            display: flex;
+            flex-direction: column;
+            align-items: center; /* จัดเนื้อหาหลักให้อยู่ตรงกลาง */
+        }
+        
+        .receipt-details { width: 100%; text-align: left; font-size: 0.9rem; line-height: 1.7; margin: 15px 0; border-top: 1px solid #f2f2f2; padding-top: 10px; }
+        
+        /* แก้ไขส่วน QR และขอบคุณ */
+        #receipt-extras {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            width: 100%;
+            margin-top: 5px;
+        }
     </style>
 </head>
 <body>
@@ -321,7 +345,8 @@
                 <p style="font-size: 10px; color: #888; margin-top: 10px;">ขอบคุณที่อุดหนุน💐</p>
             </div>
         </div>
-        <button onclick="closeModal()" style="width:100%; background:#5a3d45; color:white; padding:12px; border:none; border-radius:15px; margin-top:15px; font-weight:bold;">ปิด</button>
+        <button onclick="shareReceipt()" style="width:100%; background:#d48398; color:white; padding:12px; border:none; border-radius:15px; margin-top:15px; font-weight:bold;">Save</button>
+        <button onclick="closeModal()" style="width:100%; background:#5a3d45; color:white; padding:12px; border:none; border-radius:15px; margin-top:10px; font-weight:bold;">ปิด</button>
     </div>
 </div>
 
@@ -341,7 +366,6 @@
 
     const cleanPrice = (val) => typeof val === 'number' ? val : parseFloat(String(val).replace(/[^0-9.]/g, '')) || 0;
 
-    // --- ฟังก์ชันรีเซ็ตแยกตามส่วน ---
     function resetPart(part) {
         if (part === 'flowers') {
             currentFlowerData = { "พื้น": {}, "กริตเตอร์": {} };
@@ -527,7 +551,7 @@
         }).join("");
     }
 
-        function openPopup(i, mode) {
+    function openPopup(i, mode) {
         const o = orders[i]; const isReceipt = mode === 'receipt';
         const total = cleanPrice(o.total), deposit = o.deposit || 0, remaining = total - deposit;
         const shipping = Number(o.shipping || 0);
@@ -545,10 +569,8 @@
             body += isReceipt ? `หิน: ${sTxt.join(", ")}<br>ข้อมือ: ${o.details.wristSize || "-"} cm<br>อะไหล่: ${o.details.accessories.join(", ") || "-"}` : `🔮 <b>หิน:</b> ${sTxt.join(", ")}<br>📏 <b>ข้อมือ:</b> ${o.details.wristSize || "-"} cm<br>✨ <b>อะไหล่:</b> ${o.details.accessories.join(", ") || "-"}`;
         }
 
-        // เพิ่มช่องว่างเล็กน้อยก่อนเข้าส่วนราคา
         body += `<br>`;
 
-        // แสดงยอดสินค้าแยกเมื่อมีค่าส่ง
         if (shipping > 0) {
             body += `<br>${isReceipt ? 'ค่าดอกไม้:' : '💐 <b>ราคาสินค้า:</b>'} ${productSubtotal.toLocaleString()} ฿`;
             body += `<br>${isReceipt ? 'ค่าจัดส่ง:' : '🚚 <b>ค่าจัดส่ง:</b>'} ${shipping.toLocaleString()} ฿`;
@@ -563,8 +585,48 @@
         
         document.getElementById("rc-date").innerText = "วันที่: " + o.date;
         document.getElementById("modal-body").innerHTML = body;
-        document.getElementById("receipt-extras").style.display = isReceipt ? "block" : "none";
+        document.getElementById("receipt-extras").style.display = isReceipt ? "flex" : "none";
         document.getElementById("receiptModal").style.display = "block";
+    }
+
+    // --- แชร์ใบเสร็จ ---
+    async function shareReceipt() {
+        const receiptElement = document.querySelector(".receipt-border");
+        const container = document.createElement('div');
+        container.style.width = '375px';
+        container.style.height = '500px'; 
+        container.style.display = 'flex';
+        container.style.flexDirection = 'column';
+        container.style.alignItems = 'center';
+        container.style.justifyContent = 'center';
+        container.style.padding = '20px';
+        container.style.background = '#fdf2f7'; 
+        container.style.position = 'fixed';
+        container.style.top = '-9999px';
+
+        const clone = receiptElement.cloneNode(true);
+        clone.style.width = '100%';
+        clone.style.margin = '0';
+        clone.style.background = 'white';
+        container.appendChild(clone);
+        document.body.appendChild(container);
+
+        try {
+            const canvas = await html2canvas(container, { scale: 2 });
+            document.body.removeChild(container);
+            
+            canvas.toBlob(async (blob) => {
+                const file = new File([blob], 'METIST_Receipt.png', { type: 'image/png' });
+                if (navigator.share && navigator.canShare({ files: [file] })) {
+                    await navigator.share({ files: [file], title: 'ใบเสร็จ METIST' });
+                } else {
+                    const a = document.createElement('a');
+                    a.download = 'METIST_Receipt.png';
+                    a.href = canvas.toDataURL();
+                    a.click();
+                }
+            });
+        } catch (e) { alert("ล้มเหลว: " + e); }
     }
 
     function renderSummary() {
@@ -597,67 +659,46 @@
     function closeModal() { document.getElementById("receiptModal").style.display = "none"; }
     function exportData() { const blob = new Blob([JSON.stringify({ orders, costs })], { type: "application/json" }); const a = document.createElement("a"); a.href = URL.createObjectURL(blob); a.download = `METIST_Backup.json`; a.click(); }
     function importData(e) { const reader = new FileReader(); reader.onload = (ev) => { const data = JSON.parse(ev.target.result); if (confirm("นำเข้าข้อมูล?")) { localStorage.setItem("metist_orders", JSON.stringify(data.orders)); localStorage.setItem("metist_costs", JSON.stringify(data.costs)); location.reload(); } }; reader.readAsText(e.target.files[0]); }
-// --- ฟังก์ชันสรุปงานที่ต้องทำ (Task Summary) ---
-function showTaskSummary() {
-    const pendingOrders = orders.filter(o => !o.status);
-    if (pendingOrders.length === 0) {
-        alert("เย้! ไม่มีออเดอร์ค้างทำในขณะนี้ 🌸");
-        return;
-    }
 
-    let flowerSummary = {};
-    let stoneSummary = {};
-    let totalPending = pendingOrders.length;
-
-    pendingOrders.forEach(o => {
-        if (o.type === 'ดอกไม้') {
-            const flowers = o.details.flowers;
-            for (let type in flowers) {
-                for (let color in flowers[type]) {
-                    if (flowers[type][color] > 0) {
-                        const key = `${color} (${type})`;
-                        flowerSummary[key] = (flowerSummary[key] || 0) + flowers[type][color];
+    function showTaskSummary() {
+        const pendingOrders = orders.filter(o => !o.status);
+        if (pendingOrders.length === 0) { alert("เย้! ไม่มีออเดอร์ค้างทำในขณะนี้ 🌸"); return; }
+        let flowerSummary = {}; let stoneSummary = {};
+        pendingOrders.forEach(o => {
+            if (o.type === 'ดอกไม้') {
+                const flowers = o.details.flowers;
+                for (let type in flowers) {
+                    for (let color in flowers[type]) {
+                        if (flowers[type][color] > 0) {
+                            const key = `${color} (${type})`;
+                            flowerSummary[key] = (flowerSummary[key] || 0) + flowers[type][color];
+                        }
                     }
                 }
+            } else if (o.type === 'กำไล') {
+                const stones = o.details.stones;
+                for (let stone in stones) { if (stones[stone] > 0) stoneSummary[stone] = (stoneSummary[stone] || 0) + stones[stone]; }
             }
-        } else if (o.type === 'กำไล') {
-            const stones = o.details.stones;
-            for (let stone in stones) {
-                if (stones[stone] > 0) {
-                    stoneSummary[stone] = (stoneSummary[stone] || 0) + stones[stone];
-                }
-            }
+        });
+        let summaryHtml = `<div style="text-align:left; font-size:14px;"><p><b>📦 ออเดอร์ค้างทำทั้งหมด: ${pendingOrders.length} รายการ</b></p><hr>`;
+        if (Object.keys(flowerSummary).length > 0) {
+            summaryHtml += `<p><b>🌹 ดอกไม้ที่ต้องเตรียม:</b></p><ul>`;
+            for (let f in flowerSummary) summaryHtml += `<li>${f}: ${flowerSummary[f]} ดอก</li>`;
+            summaryHtml += `</ul>`;
         }
-    });
-
-    // สร้างเนื้อหาที่จะแสดงใน Modal
-    let summaryHtml = `<div style="text-align:left; font-size:14px;">`;
-    summaryHtml += `<p><b>📦 ออเดอร์ค้างทำทั้งหมด: ${totalPending} รายการ</b></p><hr>`;
-
-    if (Object.keys(flowerSummary).length > 0) {
-        summaryHtml += `<p><b>🌹 ดอกไม้ที่ต้องเตรียม:</b></p><ul>`;
-        for (let f in flowerSummary) {
-            summaryHtml += `<li>${f}: ${flowerSummary[f]} ดอก</li>`;
+        if (Object.keys(stoneSummary).length > 0) {
+            summaryHtml += `<p><b>🔮 หินที่ต้องใช้:</b></p><ul>`;
+            for (let s in stoneSummary) summaryHtml += `<li>${s}: ${stoneSummary[s]} เม็ด</li>`;
+            summaryHtml += `</ul>`;
         }
-        summaryHtml += `</ul>`;
+        summaryHtml += `</div>`;
+        document.getElementById("receipt-title").innerText = "📋 สรุปสิ่งที่ต้องเตรียม";
+        document.getElementById("rc-date").innerText = "ข้อมูล ณ วันที่: " + new Date().toLocaleDateString('th-TH');
+        document.getElementById("modal-body").innerHTML = summaryHtml;
+        document.getElementById("receipt-extras").style.display = "none";
+        document.getElementById("receiptModal").style.display = "block";
     }
 
-    if (Object.keys(stoneSummary).length > 0) {
-        summaryHtml += `<p><b>🔮 หินที่ต้องใช้:</b></p><ul>`;
-        for (let s in stoneSummary) {
-            summaryHtml += `<li>${s}: ${stoneSummary[s]} เม็ด</li>`;
-        }
-        summaryHtml += `</ul>`;
-    }
-    summaryHtml += `</div>`;
-
-    // ใช้ Modal เดิมที่มีอยู่แสดงผล
-    document.getElementById("receipt-title").innerText = "📋 สรุปสิ่งที่ต้องเตรียม";
-    document.getElementById("rc-date").innerText = "ข้อมูล ณ วันที่: " + new Date().toLocaleDateString('th-TH');
-    document.getElementById("modal-body").innerHTML = summaryHtml;
-    document.getElementById("receipt-extras").style.display = "none"; // ปิด QR Code
-    document.getElementById("receiptModal").style.display = "block";
-}
     // --- Init UI Grid ---
     document.getElementById("paper-grid").innerHTML = ["ดำ", "ขาว", "ชมพู", "แดง"].map(c => `<button class="square-btn" style="background:${colors[c]}; color:${c==='ขาว'?'#555':'#fff'}" onclick="selectedPapers.push('${c}'); document.getElementById('paperChoice').innerText='เลือก: '+selectedPapers.join(',')">${c}</button>`).join("");
     document.getElementById("bow-grid").innerHTML = ["แดง", "ขาว", "ชมพู", "น้ำเงิน", "ม่วง", "ชมพูแก้ว", "แดงแก้ว"].map(c => `<button class="square-btn" style="background:${colors[c]}; color:${c==='ขาว'?'#555':'#fff'}" onclick="selectedBows.push('${c}'); document.getElementById('bowChoice').innerText='เลือก: '+selectedBows.join(',')">${c}</button>`).join("");
