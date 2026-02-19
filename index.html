@@ -156,6 +156,7 @@
 <div id="page-flower" class="page active">
     <div class="input-row">
         <input id="customer" placeholder="ชื่อลูกค้า...">
+        <input id="basePrice" type="number" style="width: 100px; flex-shrink: 0;" placeholder="ราคาช่อ" oninput="calcTotal()">
         <input id="ship-flower" type="number" class="shipping-input" placeholder="ค่าส่ง" oninput="calcTotal()">
     </div>
     <div class="card">
@@ -166,8 +167,7 @@
             <label><input type="radio" name="flowerType" value="พื้น" onchange="renderFlowers()"> สีพื้น</label>
         </div>
         <div class="flower-flex-container" id="flower-grid"></div>
-        <input id="basePrice" type="number" placeholder="ราคาช่อ (บาท)" oninput="calcTotal()">
-    </div>
+        </div>
     <div class="card">
         <h2>📦 กระดาษห่อ</h2>
         <button class="btn-reset-mini" onclick="resetPart('papers')">ล้าง</button>
