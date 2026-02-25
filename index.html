@@ -22,6 +22,8 @@
             --green: #d9f5e3;
             --bg: #fdf2f7;
             --text: #5a3d45;
+            /* แก้ไขตรงนี้: รวมบรรทัดให้ถูกต้องและใช้สีเขียวมิ้นท์เข้ม */
+            --cutter-color: #26a69a; 
         }
 
         body {
@@ -82,9 +84,36 @@
             font-size: 16px; 
         }
         .shipping-input { width: 100px; flex-shrink: 0; }
+        
+                       .btn-cutter {
+            background: var(--pink);
+            border: 1px solid #f2cbd3;
+            border-radius: 14px;
+            padding: 12px 15px;
+            font-size: 18px;
+            cursor: pointer;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.05);
+            color: var(--pink-dark);
+        }
 
-        .flower-flex-container { display: flex; justify-content: space-between; flex-wrap: nowrap; gap: 5px; margin-bottom: 15px; overflow-x: auto; padding-bottom: 5px; }
-        .color-item { flex: 0 0 60px; text-align: center; min-width: 60px; cursor: pointer; }
+        .flower-flex-container { 
+            display: flex !important; /* บังคับใช้ flex */
+            flex-direction: row !important; /* บังคับเรียงแนวนอน */
+            justify-content: flex-start; 
+            flex-wrap: nowrap; 
+            gap: 10px; 
+            margin-bottom: 15px; 
+            overflow-x: auto; 
+            padding-bottom: 10px;
+            width: 100%;
+        }
+
+        .color-item { 
+            flex: 0 0 65px; /* ล็อกความกว้างของแต่ละปุ่มไว้ */
+            text-align: center; 
+            min-width: 65px; 
+            cursor: pointer; 
+        }
         .color-btn { 
             width: 45px; height: 45px; border-radius: 50%; 
             border: 2px solid #fff; outline: 1px solid #eee;
@@ -100,6 +129,10 @@
             color: #fff; cursor: pointer; font-size: 11px; font-weight: bold; 
             text-shadow: 1px 1px 2px rgba(0,0,0,0.2);
         }
+
+        .order-tabs { display: flex; gap: 5px; margin-bottom: 10px; padding: 0 5px; }
+        .order-tabs button { flex: 1; padding: 8px; border: none; border-radius: 10px; font-size: 10px; font-weight: bold; background: #eee; color: #888; cursor: pointer; }
+        .order-tabs button.active { background: var(--pink-dark); color: white; }
 
         .order-item { background: white; border-radius: 18px; padding: 15px; margin-bottom: 12px; box-shadow: 0 4px 12px rgba(0,0,0,0.05); }
         .btn-group { display: flex; flex-wrap: wrap; gap: 5px; margin-top: 10px; }
@@ -156,8 +189,9 @@
 <div id="page-flower" class="page active">
     <div class="input-row">
         <input id="customer" placeholder="ชื่อลูกค้า...">
-        <input id="basePrice" type="number" style="width: 100px; flex-shrink: 0;" placeholder="ราคาช่อ" oninput="calcTotal()">
+        <input id="basePrice" type="number" style="width: 100px; flex-shrink: 0;" placeholder="ราคา" oninput="calcTotal()">
         <input id="ship-flower" type="number" class="shipping-input" placeholder="ค่าส่ง" oninput="calcTotal()">
+        <button class="btn-cutter" onclick="saveOrder('เครื่องตัด')" title="บันทึกเครื่องตัด">✂️</button>
     </div>
     <div class="card">
         <h2>🌹 สีดอกไม้</h2>
@@ -195,14 +229,19 @@
 <div id="page-orders" class="page">
     <div class="card">
         <h2 style="margin-bottom:10px;">🔍 ค้นหาลูกค้า</h2>
-        <input type="text" id="searchOrder" placeholder="พิมพ์ชื่อเพื่อค้นหา..." oninput="renderOrderList()" style="margin-bottom:0;">
+        <input type="text" id="searchOrder" placeholder="พิมพ์ชื่อเพื่อค้นหา..." oninput="renderOrderList()" style="margin-bottom:10px;">
+        <div class="order-tabs">
+            <button id="tab-all" class="active" onclick="filterType('all')">ทั้งหมด</button>
+            <button id="tab-flower" onclick="filterType('ดอกไม้')">🌸 ดอกไม้</button>
+            <button id="tab-cutter" onclick="filterType('เครื่องตัด')">✂️ เครื่องตัด</button>
+        </div>
     </div>
     <div style="display:flex; justify-content:space-between; align-items: center; padding:0 10px; margin-bottom:10px;">
         <div>
             <span id="pending-count" style="font-size:0.8rem; font-weight:bold; color:var(--pink-dark);"></span>
             <button onclick="showTaskSummary()" style="margin-left:10px; padding:5px 12px; background:var(--pink); border:none; border-radius:10px; color:var(--text); font-size:11px; font-weight:bold; cursor:pointer; box-shadow: 0 2px 4px rgba(0,0,0,0.1);">📋 สรุปงานที่ต้องทำ</button>
         </div>
-        <span style="font-size:0.7rem; color:gray;">🌸 รายการออเดอร์ดอกไม้</span>
+        <span style="font-size:0.7rem; color:gray;">🌸 รายการออเดอร์</span>
     </div>
     <div id="order-list"></div>
 </div>
@@ -229,6 +268,11 @@
                     <td style="text-align: left;">🌸 ดอกไม้</td>
                     <td id="pay-flower-done" style="font-weight: bold; color: #51cf66;">0</td>
                     <td id="pay-flower-pending" style="font-weight: bold; color: #ff6b6b;">0</td>
+                </tr>
+                <tr>
+                    <td style="text-align: left;">✂️ เครื่องตัด</td>
+                    <td id="pay-cutter-done" style="font-weight: bold; color: #51cf66;">0</td>
+                    <td id="pay-cutter-pending" style="font-weight: bold; color: #ff6b6b;">0</td>
                 </tr>
             </tbody>
         </table>
@@ -279,6 +323,7 @@
     let orders = JSON.parse(localStorage.getItem("metist_orders") || "[]");
     let costs = JSON.parse(localStorage.getItem("metist_costs") || "[]");
     let orderBeingEdited = null;
+    let currentFilter = 'all';
 
     const colors = { แดง: "#e63946", ขาว: "#ffffff", ชมพู: "#f7b2cc", น้ำเงิน: "#457b9d", ม่วง: "#9b5de5", ดำ: "#333333", ชมพูแก้ว: "#ff007f", แดงแก้ว: "#b91d1d" };
     const extraPrice = { ผีเสื้อ: 5, มงกุฎ: 10, ไฟLED: 25, ไข่มุก: 0, ขอบลูกไม้: 0, ขอบมุก: 0, การ์ด: 0 };
@@ -350,16 +395,18 @@
     function saveOrder(productType) {
         let name = document.getElementById("customer").value;
         let shipping = Number(document.getElementById("ship-flower").value || 0);
+        let basePrice = document.getElementById("basePrice").value;
         let total = calcTotal();
-        let details = { flowers: JSON.parse(JSON.stringify(currentFlowerData)), paper: selectedPapers.join(", "), bow: selectedBows.join(", "), extras: {...selectedExtras}, basePrice: document.getElementById("basePrice").value };
+        
+        let details = (productType === 'เครื่องตัด') ? { isCutter: true, basePrice } : { flowers: JSON.parse(JSON.stringify(currentFlowerData)), paper: selectedPapers.join(", "), bow: selectedBows.join(", "), extras: {...selectedExtras}, basePrice: basePrice };
 
         if(!name) { alert("กรุณาใส่ชื่อลูกค้า"); return; }
 
         if (orderBeingEdited !== null) {
-            orders[orderBeingEdited] = { ...orders[orderBeingEdited], name, total, shipping, details };
+            orders[orderBeingEdited] = { ...orders[orderBeingEdited], name, total, shipping, details, type: productType };
             orderBeingEdited = null;
         } else {
-            orders.push({ id: Date.now(), name, type: 'ดอกไม้', total, shipping, details, date: new Date().toLocaleDateString('th-TH'), status: false, paid: false, deposit: 0 });
+            orders.push({ id: Date.now(), name, type: productType, total, shipping, details, date: new Date().toLocaleDateString('th-TH'), status: false, paid: false, deposit: 0 });
         }
 
         updateStore();
@@ -378,38 +425,71 @@
         document.getElementById("customer").value = o.name;
         document.getElementById("ship-flower").value = o.shipping;
         document.getElementById("basePrice").value = o.details.basePrice || "";
-        currentFlowerData = JSON.parse(JSON.stringify(o.details.flowers));
-        selectedPapers = o.details.paper ? o.details.paper.split(",").filter(x => x.trim() !== "") : [];
-        selectedBows = o.details.bow ? o.details.bow.split(",").filter(x => x.trim() !== "") : [];
-        selectedExtras = {...o.details.extras};
-        document.getElementById("paperChoice").innerText = "เลือก: " + (o.details.paper || "-");
-        document.getElementById("bowChoice").innerText = "เลือก: " + (o.details.bow || "-");
-        renderFlowers(); renderExtraChoice(); calcTotal();
+        
+        if (o.type === 'ดอกไม้') {
+            currentFlowerData = JSON.parse(JSON.stringify(o.details.flowers));
+            selectedPapers = o.details.paper ? o.details.paper.split(",").filter(x => x.trim() !== "") : [];
+            selectedBows = o.details.bow ? o.details.bow.split(",").filter(x => x.trim() !== "") : [];
+            selectedExtras = {...o.details.extras};
+            document.getElementById("paperChoice").innerText = "เลือก: " + (o.details.paper || "-");
+            document.getElementById("bowChoice").innerText = "เลือก: " + (o.details.bow || "-");
+            renderFlowers(); renderExtraChoice();
+        }
+        calcTotal();
         document.getElementById("btn-save-flower").innerText = "อัปเดตออเดอร์ (แก้ไข)";
+    }
+
+    function filterType(type) {
+        currentFilter = type;
+        document.querySelectorAll('.order-tabs button').forEach(b => b.classList.remove('active'));
+        document.getElementById('tab-' + type).classList.add('active');
+        renderOrderList();
     }
 
     function renderOrderList() {
         const listDiv = document.getElementById("order-list");
         const search = document.getElementById("searchOrder").value.toLowerCase();
-        let filtered = orders.filter(o => o.name.toLowerCase().includes(search));
+        
+        let filtered = orders.filter(o => {
+            const matchSearch = o.name.toLowerCase().includes(search);
+            const matchFilter = currentFilter === 'all' || o.type === currentFilter;
+            return matchSearch && matchFilter;
+        });
+
         filtered.sort((a, b) => (a.status !== b.status) ? (a.status ? 1 : -1) : (b.id - a.id));
         document.getElementById("pending-count").innerText = `รอดำเนินการ: ${orders.filter(o => !o.status).length}`;
+        
         listDiv.innerHTML = filtered.map((o) => {
             const realIdx = orders.findIndex(orig => orig.id === o.id);
-            const accent = '#d48398';
-            const bg = '#fff5f8';
+            const isCutter = o.type === 'เครื่องตัด';
+            
+            /* แก้ไขตรงนี้: แยกสี accent และ bg ระหว่าง ดอกไม้ กับ เครื่องตัด */
+            const accent = isCutter ? 'var(--cutter-color)' : 'var(--pink-dark)';
+            const bg = isCutter ? '#f0f9f8' : '#fff5f8';
+            
             const total = cleanPrice(o.total), deposit = o.deposit || 0, remaining = total - deposit;
+            
             return `<div class="order-item" style="border-left: 8px solid ${accent}; background: ${bg};">
                     <div style="display:flex; justify-content:space-between; font-size:11px; font-weight:bold; color:${accent}">
-                        <span>🌸 FLOWER ${o.status ? '✅' : '⏳'}</span>
+                        <span>${isCutter ? '✂️ CUTTER' : '🌸 FLOWER'} ${o.status ? '✅' : '⏳'}</span>
                         <span style="color:gray">${o.date}</span>
                     </div>
                     <div style="margin:5px 0"><b>👤 ${o.name}</b> ${o.shipping > 0 ? `<small style="color:#ff6b6b">(ส่ง +${o.shipping})</small>` : ''}</div>
                     <div style="font-weight:bold">ยอดทั้งหมด: ${total.toLocaleString()} ฿</div>
                     ${deposit > 0 ? `<div style="font-size:11px; color:#666;">มัดจำแล้ว: <span style="color:#51cf66; font-weight:bold;">${deposit.toLocaleString()} ฿</span></div><div style="font-size:11px; color:#ff6b6b; margin-bottom:5px;">คงเหลือ: <b>${remaining.toLocaleString()} ฿</b></div>` : ''}
-                    <div class="btn-group" style="margin-top:10px;"><button class="status-btn" style="background:${o.status ? '#51cf66' : '#ff6b6b'}; flex:1" onclick="toggleStatus(${realIdx})">${o.status ? 'ทำแล้ว' : 'รอดำเนินการ'}</button><button class="status-btn" style="background:${o.paid ? '#51cf66' : '#ff6b6b'}; flex:1" onclick="togglePaid(${realIdx})">${o.paid ? 'จ่ายครบแล้ว' : 'ยังไม่ครบ'}</button></div>
-                    <div class="btn-group"><button class="status-btn" style="background:white; color:${accent}; border:1px solid ${accent}; flex:1" onclick="setDeposit(${realIdx})">มัดจำ</button><button class="status-btn" style="background:white; color:${accent}; border:1px solid ${accent}; flex:1" onclick="openPopup(${realIdx}, 'order')">รายละเอียด</button><button class="status-btn" style="background:white; color:${accent}; border:1px solid ${accent}; flex:1" onclick="openPopup(${realIdx}, 'receipt')">ใบเสร็จ</button></div>
-                    <div class="btn-group"><button class="status-btn" style="background:white; color:${accent}; border:1px solid ${accent}; flex:1" onclick="editOrder(${realIdx})">แก้ไขออเดอร์</button><button class="status-btn" style="background:#eee; color:#999; width:35px" onclick="deleteOrder(${realIdx})">🗑️</button></div>
+                    <div class="btn-group">
+                        <button class="status-btn" style="background:${o.status ? '#51cf66' : '#ff6b6b'}; flex:1" onclick="toggleStatus(${realIdx})">${o.status ? 'ทำแล้ว' : 'รอดำเนินการ'}</button>
+                        <button class="status-btn" style="background:${o.paid ? '#51cf66' : '#ff6b6b'}; flex:1" onclick="togglePaid(${realIdx})">${o.paid ? 'จ่ายครบแล้ว' : 'ยังไม่ครบ'}</button>
+                    </div>
+                    <div class="btn-group">
+                        <button class="status-btn" style="background:white; color:${accent}; border:1px solid ${accent}; flex:1" onclick="setDeposit(${realIdx})">มัดจำ</button>
+                        <button class="status-btn" style="background:white; color:${accent}; border:1px solid ${accent}; flex:1" onclick="openPopup(${realIdx}, 'order')">รายละเอียด</button>
+                        <button class="status-btn" style="background:white; color:${accent}; border:1px solid ${accent}; flex:1" onclick="openPopup(${realIdx}, 'receipt')">ใบเสร็จ</button>
+                    </div>
+                    <div class="btn-group">
+                        <button class="status-btn" style="background:white; color:${accent}; border:1px solid ${accent}; flex:1" onclick="editOrder(${realIdx})">แก้ไขออเดอร์</button>
+                        <button class="status-btn" style="background:#eee; color:#999; width:35px" onclick="deleteOrder(${realIdx})">🗑️</button>
+                    </div>
                 </div>`;
         }).join("");
     }
@@ -420,20 +500,22 @@
         const shipping = Number(o.shipping || 0);
         const productSubtotal = total - shipping; 
 
-        document.getElementById("receipt-title").innerText = isReceipt ? "METIST" : "🌸 METIST ✨";
+        document.getElementById("receipt-title").innerText = isReceipt ? "METIST" : (o.type === 'เครื่องตัด' ? "🌸 METIST ✨" : "🌸 METIST ✨");
         let body = isReceipt ? `ลูกค้า: คุณ ${o.name}<br>` : `👤 <b>ลูกค้า:</b> ${o.name}<br>`;
         
-        let fTxt = []; for (let t in o.details.flowers) { for (let c in o.details.flowers[t]) if (o.details.flowers[t][c] > 0) fTxt.push(`${c}${t==='กริตเตอร์'?'(กริต)':''} x${o.details.flowers[t][c]}`); }
-        let exTxt = Object.keys(o.details.extras).filter(ex => o.details.extras[ex] > 0);
-        body += isReceipt ? `สีดอกไม้: ${fTxt.join(", ") || "-"}<br>กระดาษ: ${o.details.paper || "-"}<br>โบว์: ${o.details.bow || "-"}<br>ตกแต่ง: ${exTxt.join(", ") || "-"}` : `🌹 <b>สีดอก:</b> ${fTxt.join(", ") || "-"}<br>📦 <b>กระดาษ:</b> ${o.details.paper || "-"}<br>🎀 <b>โบว์:</b> ${o.details.bow || "-"}<br>✨ <b>ของตกแต่ง:</b> ${exTxt.join(", ") || "-"}`;
-
-        body += `<br>`;
-
-        if (shipping > 0) {
-            body += `<br>${isReceipt ? 'ค่าดอกไม้:' : '💐 <b>ราคาสินค้า:</b>'} ${productSubtotal.toLocaleString()} ฿`;
-            body += `<br>${isReceipt ? 'ค่าจัดส่ง:' : '🚚 <b>ค่าจัดส่ง:</b>'} ${shipping.toLocaleString()} ฿`;
+        if (o.type === 'เครื่องตัด') {
+            body += `รายการ: งานเครื่องตัด<br>`;
+        } else {
+            let fTxt = []; for (let t in o.details.flowers) { for (let c in o.details.flowers[t]) if (o.details.flowers[t][c] > 0) fTxt.push(`${c}${t==='กริตเตอร์'?'(กริต)':''} x${o.details.flowers[t][c]}`); }
+            let exTxt = Object.keys(o.details.extras).filter(ex => o.details.extras[ex] > 0);
+            body += isReceipt ? `สีดอกไม้: ${fTxt.join(", ") || "-"}<br>กระดาษ: ${o.details.paper || "-"}<br>โบว์: ${o.details.bow || "-"}<br>ตกแต่ง: ${exTxt.join(", ") || "-"}` : `🌹 <b>สีดอก:</b> ${fTxt.join(", ") || "-"}<br>📦 <b>กระดาษ:</b> ${o.details.paper || "-"}<br>🎀 <b>โบว์:</b> ${o.details.bow || "-"}<br>✨ <b>ของตกแต่ง:</b> ${exTxt.join(", ") || "-"}`;
         }
 
+        body += `<br>`;
+        if (shipping > 0) {
+            body += `<br>${isReceipt ? 'ราคาสินค้า:' : '💐 <b>ราคาสินค้า:</b>'} ${productSubtotal.toLocaleString()} ฿`;
+            body += `<br>${isReceipt ? 'ค่าจัดส่ง:' : '🚚 <b>ค่าจัดส่ง:</b>'} ${shipping.toLocaleString()} ฿`;
+        }
         body += `<br><b style="font-size:1.1rem; color:var(--pink-dark)">ยอดรวมสุทธิ: ${total.toLocaleString()} ฿</b>`;
         
         if (deposit > 0) { 
@@ -488,13 +570,26 @@
 
     function renderSummary() {
         const totalSales = orders.reduce((s, o) => s + cleanPrice(o.total), 0);
-        const fPaid = orders.reduce((s, o) => s + (o.paid ? cleanPrice(o.total) : (o.deposit || 0)), 0);
         const cost = costs.reduce((s, c) => s + (Number(c.amount) || 0), 0);
+        
+        const flowerOrders = orders.filter(o => o.type === 'ดอกไม้');
+        const fPaid = flowerOrders.reduce((s, o) => s + (o.paid ? cleanPrice(o.total) : (o.deposit || 0)), 0);
+        const fPending = flowerOrders.reduce((s, o) => s + (o.paid ? 0 : (cleanPrice(o.total) - (o.deposit || 0))), 0);
+        
+        const cutterOrders = orders.filter(o => o.type === 'เครื่องตัด');
+        const cPaid = cutterOrders.reduce((s, o) => s + (o.paid ? cleanPrice(o.total) : (o.deposit || 0)), 0);
+        const cPending = cutterOrders.reduce((s, o) => s + (o.paid ? 0 : (cleanPrice(o.total) - (o.deposit || 0))), 0);
+
         document.getElementById("stat-sale").innerText = totalSales.toLocaleString();
         document.getElementById("stat-cost").innerText = cost.toLocaleString();
         document.getElementById("stat-profit").innerText = (totalSales - cost).toLocaleString();
+        
         document.getElementById("pay-flower-done").innerText = fPaid.toLocaleString();
-        document.getElementById("pay-flower-pending").innerText = (totalSales - fPaid).toLocaleString();
+        document.getElementById("pay-flower-pending").innerText = fPending.toLocaleString();
+        
+        document.getElementById("pay-cutter-done").innerText = cPaid.toLocaleString();
+        document.getElementById("pay-cutter-pending").innerText = cPending.toLocaleString();
+
         document.getElementById("cost-history-body").innerHTML = [...costs].reverse().map((c, i) => `<tr><td>${c.date}</td><td>${c.desc}</td><td>${Number(c.amount).toLocaleString()}</td><td><button onclick="deleteCost(${costs.length-1-i})" style="border:none; color:red; background:none;">ลบ</button></td></tr>`).join("");
     }
 
@@ -513,19 +608,28 @@
     function showTaskSummary() {
         const pendingOrders = orders.filter(o => !o.status);
         if (pendingOrders.length === 0) { alert("เย้! ไม่มีออเดอร์ค้างทำในขณะนี้ 🌸"); return; }
+        
         let flowerSummary = {}; 
+        let cutterCount = 0;
+
         pendingOrders.forEach(o => {
-            const flowers = o.details.flowers;
-            for (let type in flowers) {
-                for (let color in flowers[type]) {
-                    if (flowers[type][color] > 0) {
-                        const key = `${color} (${type})`;
-                        flowerSummary[key] = (flowerSummary[key] || 0) + flowers[type][color];
+            if (o.type === 'เครื่องตัด') {
+                cutterCount++;
+            } else {
+                const flowers = o.details.flowers;
+                for (let type in flowers) {
+                    for (let color in flowers[type]) {
+                        if (flowers[type][color] > 0) {
+                            const key = `${color} (${type})`;
+                            flowerSummary[key] = (flowerSummary[key] || 0) + flowers[type][color];
+                        }
                     }
                 }
             }
         });
-        let summaryHtml = `<div style="text-align:left; font-size:14px;"><p><b>📦 ออเดอร์ค้างทำทั้งหมด: ${pendingOrders.length} รายการ</b></p><hr>`;
+
+        let summaryHtml = `<div style="text-align:left; font-size:14px;"><p><b>📦 งานค้างทั้งหมด: ${pendingOrders.length} รายการ</b></p><hr>`;
+        if (cutterCount > 0) summaryHtml += `<p style="color:var(--cutter-color)"><b>✂️ งานเครื่องตัด: ${cutterCount} อัน</b></p>`;
         if (Object.keys(flowerSummary).length > 0) {
             summaryHtml += `<p><b>🌹 ดอกไม้ที่ต้องเตรียม:</b></p><ul>`;
             for (let f in flowerSummary) summaryHtml += `<li>${f}: ${flowerSummary[f]} ดอก</li>`;
