@@ -393,30 +393,56 @@
     }
 
     function saveOrder(productType) {
-        let name = document.getElementById("customer").value;
-        let shipping = Number(document.getElementById("ship-flower").value || 0);
-        let basePrice = document.getElementById("basePrice").value;
-        let total = calcTotal();
-        
-        let details = (productType === 'เครื่องตัด') ? { isCutter: true, basePrice } : { flowers: JSON.parse(JSON.stringify(currentFlowerData)), paper: selectedPapers.join(", "), bow: selectedBows.join(", "), extras: {...selectedExtras}, basePrice: basePrice };
+    let name = document.getElementById("customer").value;
+    if(!name) { alert("กรุณาใส่ชื่อลูกค้า"); return; }
+    
+    let shipping = Number(document.getElementById("ship-flower").value || 0);
+    let basePrice = document.getElementById("basePrice").value;
+    let total = calcTotal();
+    let qty = 1; // ค่าเริ่มต้น
 
-        if(!name) { alert("กรุณาใส่ชื่อลูกค้า"); return; }
-
-        if (orderBeingEdited !== null) {
-            orders[orderBeingEdited] = { ...orders[orderBeingEdited], name, total, shipping, details, type: productType };
-            orderBeingEdited = null;
-        } else {
-            orders.push({ id: Date.now(), name, type: productType, total, shipping, details, date: new Date().toLocaleDateString('th-TH'), status: false, paid: false, deposit: 0 });
-        }
-
-        updateStore();
-        document.getElementById("customer").value = ""; 
-        document.getElementById("ship-flower").value = "";
-        resetPart('flowers'); resetPart('papers'); resetPart('bows'); resetPart('extras');
-        document.getElementById("basePrice").value = ""; 
-        document.getElementById("btn-save-flower").innerText = "บันทึกออเดอร์";
-        switchPage('orders');
+    // ถ้าเป็นเครื่องตัด ให้ถามจำนวนชิ้น
+    if (productType === 'เครื่องตัด' && orderBeingEdited === null) {
+        let qtyInput = prompt("ระบุจำนวนเครื่องตัด (ชิ้น):", "1");
+        if (qtyInput === null) return; 
+        qty = parseInt(qtyInput) || 1;
+        if (qty > 10) qty = 10;
+        if (qty < 1) qty = 1;
     }
+
+    let details = (productType === 'เครื่องตัด') 
+        ? { isCutter: true, basePrice, qty: qty } 
+        : { flowers: JSON.parse(JSON.stringify(currentFlowerData)), paper: selectedPapers.join(", "), bow: selectedBows.join(", "), extras: {...selectedExtras}, basePrice: basePrice, qty: 1 };
+
+    if (orderBeingEdited !== null) {
+        // กรณีแก้ไขออเดอร์เดิม (รักษา qty เดิมไว้ถ้าไม่ได้ระบุใหม่)
+        let oldQty = orders[orderBeingEdited].details.qty || 1;
+        orders[orderBeingEdited] = { ...orders[orderBeingEdited], name, total, shipping, details: {...details, qty: oldQty}, type: productType };
+        orderBeingEdited = null;
+    } else {
+        orders.push({ 
+            id: Date.now(), 
+            name: name + (qty > 1 ? ` (${qty} ชิ้น)` : ""), // แสดงจำนวนในวงเล็บหลังชื่อ
+            type: productType, 
+            total, 
+            shipping, 
+            details, 
+            date: new Date().toLocaleDateString('th-TH'), 
+            status: false, 
+            paid: false, 
+            deposit: 0 
+        });
+    }
+
+    updateStore();
+    // Reset fields
+    document.getElementById("customer").value = ""; 
+    document.getElementById("ship-flower").value = "";
+    resetPart('flowers'); resetPart('papers'); resetPart('bows'); resetPart('extras');
+    document.getElementById("basePrice").value = ""; 
+    document.getElementById("btn-save-flower").innerText = "บันทึกออเดอร์";
+    switchPage('orders');
+}
 
     function editOrder(index) {
         const o = orders[index];
@@ -606,42 +632,43 @@
     function importData(e) { const reader = new FileReader(); reader.onload = (ev) => { const data = JSON.parse(ev.target.result); if (confirm("นำเข้าข้อมูล?")) { localStorage.setItem("metist_orders", JSON.stringify(data.orders)); localStorage.setItem("metist_costs", JSON.stringify(data.costs)); location.reload(); } }; reader.readAsText(e.target.files[0]); }
 
     function showTaskSummary() {
-        const pendingOrders = orders.filter(o => !o.status);
-        if (pendingOrders.length === 0) { alert("เย้! ไม่มีออเดอร์ค้างทำในขณะนี้ 🌸"); return; }
-        
-        let flowerSummary = {}; 
-        let cutterCount = 0;
+    const pendingOrders = orders.filter(o => !o.status);
+    if (pendingOrders.length === 0) { alert("เย้! ไม่มีออเดอร์ค้างทำในขณะนี้ 🌸"); return; }
+    
+    let flowerSummary = {}; 
+    let cutterTotalQty = 0; // เปลี่ยนจากนับรายการเป็นนับจำนวนชิ้นรวม
 
-        pendingOrders.forEach(o => {
-            if (o.type === 'เครื่องตัด') {
-                cutterCount++;
-            } else {
-                const flowers = o.details.flowers;
-                for (let type in flowers) {
-                    for (let color in flowers[type]) {
-                        if (flowers[type][color] > 0) {
-                            const key = `${color} (${type})`;
-                            flowerSummary[key] = (flowerSummary[key] || 0) + flowers[type][color];
-                        }
+    pendingOrders.forEach(o => {
+        let q = o.details.qty || 1; // ดึงจำนวนชิ้นออกมา ถ้าไม่มีให้เป็น 1
+        if (o.type === 'เครื่องตัด') {
+            cutterTotalQty += q;
+        } else {
+            const flowers = o.details.flowers;
+            for (let type in flowers) {
+                for (let color in flowers[type]) {
+                    if (flowers[type][color] > 0) {
+                        const key = `${color} (${type})`;
+                        flowerSummary[key] = (flowerSummary[key] || 0) + (flowers[type][color]);
                     }
                 }
             }
-        });
-
-        let summaryHtml = `<div style="text-align:left; font-size:14px;"><p><b>📦 งานค้างทั้งหมด: ${pendingOrders.length} รายการ</b></p><hr>`;
-        if (cutterCount > 0) summaryHtml += `<p style="color:var(--cutter-color)"><b>✂️ งานเครื่องตัด: ${cutterCount} อัน</b></p>`;
-        if (Object.keys(flowerSummary).length > 0) {
-            summaryHtml += `<p><b>🌹 ดอกไม้ที่ต้องเตรียม:</b></p><ul>`;
-            for (let f in flowerSummary) summaryHtml += `<li>${f}: ${flowerSummary[f]} ดอก</li>`;
-            summaryHtml += `</ul>`;
         }
-        summaryHtml += `</div>`;
-        document.getElementById("receipt-title").innerText = "📋 สรุปสิ่งที่ต้องเตรียม";
-        document.getElementById("rc-date").innerText = "ข้อมูล ณ วันที่: " + new Date().toLocaleDateString('th-TH');
-        document.getElementById("modal-body").innerHTML = summaryHtml;
-        document.getElementById("receipt-extras").style.display = "none";
-        document.getElementById("receiptModal").style.display = "block";
+    });
+
+    let summaryHtml = `<div style="text-align:left; font-size:14px;"><p><b>📦 งานค้างทั้งหมด: ${pendingOrders.length} รายการ</b></p><hr>`;
+    if (cutterTotalQty > 0) summaryHtml += `<p style="color:var(--cutter-color); font-size:16px;"><b>✂️ งานเครื่องตัดรวม: ${cutterTotalQty} ชิ้น</b></p>`;
+    if (Object.keys(flowerSummary).length > 0) {
+        summaryHtml += `<p><b>🌹 ดอกไม้ที่ต้องเตรียม:</b></p><ul>`;
+        for (let f in flowerSummary) summaryHtml += `<li>${f}: ${flowerSummary[f]} ดอก</li>`;
+        summaryHtml += `</ul>`;
     }
+    summaryHtml += `</div>`;
+    document.getElementById("receipt-title").innerText = "📋 สรุปสิ่งที่ต้องเตรียม";
+    document.getElementById("rc-date").innerText = "ข้อมูล ณ วันที่: " + new Date().toLocaleDateString('th-TH');
+    document.getElementById("modal-body").innerHTML = summaryHtml;
+    document.getElementById("receipt-extras").style.display = "none";
+    document.getElementById("receiptModal").style.display = "block";
+}
 
     document.getElementById("paper-grid").innerHTML = ["ดำ", "ขาว", "ชมพู", "แดง"].map(c => `<button class="square-btn" style="background:${colors[c]}; color:${c==='ขาว'?'#555':'#fff'}" onclick="selectedPapers.push('${c}'); document.getElementById('paperChoice').innerText='เลือก: '+selectedPapers.join(',')">${c}</button>`).join("");
     document.getElementById("bow-grid").innerHTML = ["แดง", "ขาว", "ชมพู", "น้ำเงิน", "ม่วง", "ชมพูแก้ว", "แดงแก้ว"].map(c => `<button class="square-btn" style="background:${colors[c]}; color:${c==='ขาว'?'#555':'#fff'}" onclick="selectedBows.push('${c}'); document.getElementById('bowChoice').innerText='เลือก: '+selectedBows.join(',')">${c}</button>`).join("");
