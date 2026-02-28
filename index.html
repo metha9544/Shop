@@ -22,7 +22,6 @@
             --green: #d9f5e3;
             --bg: #fdf2f7;
             --text: #5a3d45;
-            /* แก้ไขตรงนี้: รวมบรรทัดให้ถูกต้องและใช้สีเขียวมิ้นท์เข้ม */
             --cutter-color: #26a69a; 
         }
 
@@ -85,7 +84,7 @@
         }
         .shipping-input { width: 100px; flex-shrink: 0; }
         
-                       .btn-cutter {
+        .btn-cutter {
             background: var(--pink);
             border: 1px solid #f2cbd3;
             border-radius: 14px;
@@ -97,8 +96,8 @@
         }
 
         .flower-flex-container { 
-            display: flex !important; /* บังคับใช้ flex */
-            flex-direction: row !important; /* บังคับเรียงแนวนอน */
+            display: flex !important;
+            flex-direction: row !important;
             justify-content: flex-start; 
             flex-wrap: nowrap; 
             gap: 10px; 
@@ -109,7 +108,7 @@
         }
 
         .color-item { 
-            flex: 0 0 65px; /* ล็อกความกว้างของแต่ละปุ่มไว้ */
+            flex: 0 0 65px; 
             text-align: center; 
             min-width: 65px; 
             cursor: pointer; 
@@ -393,56 +392,58 @@
     }
 
     function saveOrder(productType) {
-    let name = document.getElementById("customer").value;
-    if(!name) { alert("กรุณาใส่ชื่อลูกค้า"); return; }
-    
-    let shipping = Number(document.getElementById("ship-flower").value || 0);
-    let basePrice = document.getElementById("basePrice").value;
-    let total = calcTotal();
-    let qty = 1; // ค่าเริ่มต้น
+        let name = document.getElementById("customer").value;
+        if(!name) { alert("กรุณาใส่ชื่อลูกค้า"); return; }
+        
+        let shipping = Number(document.getElementById("ship-flower").value || 0);
+        let basePrice = document.getElementById("basePrice").value;
+        let total = calcTotal();
+        let qty = 1; 
+        let hasSwitch = false;
 
-    // ถ้าเป็นเครื่องตัด ให้ถามจำนวนชิ้น
-    if (productType === 'เครื่องตัด' && orderBeingEdited === null) {
-        let qtyInput = prompt("ระบุจำนวนเครื่องตัด (ชิ้น):", "1");
-        if (qtyInput === null) return; 
-        qty = parseInt(qtyInput) || 1;
-        if (qty > 10) qty = 10;
-        if (qty < 1) qty = 1;
+        if (productType === 'เครื่องตัด' && orderBeingEdited === null) {
+            hasSwitch = confirm("ต้องการติด 'สวิตช์' ด้วยหรือไม่?");
+            
+            let qtyInput = prompt(`ระบุจำนวนเครื่องตัด${hasSwitch ? '' : ''}ที่ต้องการ`, "1");
+            if (qtyInput === null) return; 
+            qty = parseInt(qtyInput) || 1;
+            if (qty > 10) qty = 10;
+            if (qty < 1) qty = 1;
+        }
+
+        let details = (productType === 'เครื่องตัด') 
+            ? { isCutter: true, basePrice, qty: qty, hasSwitch: hasSwitch } 
+            : { flowers: JSON.parse(JSON.stringify(currentFlowerData)), paper: selectedPapers.join(", "), bow: selectedBows.join(", "), extras: {...selectedExtras}, basePrice: basePrice, qty: 1 };
+
+        if (orderBeingEdited !== null) {
+            let oldQty = orders[orderBeingEdited].details.qty || 1;
+            let oldSwitch = orders[orderBeingEdited].details.hasSwitch || false;
+            orders[orderBeingEdited] = { ...orders[orderBeingEdited], name, total, shipping, details: {...details, qty: oldQty, hasSwitch: oldSwitch}, type: productType };
+            orderBeingEdited = null;
+        } else {
+            let displayName = name + (hasSwitch ? " (สวิตช์)" : "") + (qty > 1 ? ` (${qty} ชิ้น)` : "");
+            orders.push({ 
+                id: Date.now(), 
+                name: displayName, 
+                type: productType, 
+                total, 
+                shipping, 
+                details, 
+                date: new Date().toLocaleDateString('th-TH'), 
+                status: false, 
+                paid: false, 
+                deposit: 0 
+            });
+        }
+
+        updateStore();
+        document.getElementById("customer").value = ""; 
+        document.getElementById("ship-flower").value = "";
+        resetPart('flowers'); resetPart('papers'); resetPart('bows'); resetPart('extras');
+        document.getElementById("basePrice").value = ""; 
+        document.getElementById("btn-save-flower").innerText = "บันทึกออเดอร์";
+        switchPage('orders');
     }
-
-    let details = (productType === 'เครื่องตัด') 
-        ? { isCutter: true, basePrice, qty: qty } 
-        : { flowers: JSON.parse(JSON.stringify(currentFlowerData)), paper: selectedPapers.join(", "), bow: selectedBows.join(", "), extras: {...selectedExtras}, basePrice: basePrice, qty: 1 };
-
-    if (orderBeingEdited !== null) {
-        // กรณีแก้ไขออเดอร์เดิม (รักษา qty เดิมไว้ถ้าไม่ได้ระบุใหม่)
-        let oldQty = orders[orderBeingEdited].details.qty || 1;
-        orders[orderBeingEdited] = { ...orders[orderBeingEdited], name, total, shipping, details: {...details, qty: oldQty}, type: productType };
-        orderBeingEdited = null;
-    } else {
-        orders.push({ 
-            id: Date.now(), 
-            name: name + (qty > 1 ? ` (${qty} ชิ้น)` : ""), // แสดงจำนวนในวงเล็บหลังชื่อ
-            type: productType, 
-            total, 
-            shipping, 
-            details, 
-            date: new Date().toLocaleDateString('th-TH'), 
-            status: false, 
-            paid: false, 
-            deposit: 0 
-        });
-    }
-
-    updateStore();
-    // Reset fields
-    document.getElementById("customer").value = ""; 
-    document.getElementById("ship-flower").value = "";
-    resetPart('flowers'); resetPart('papers'); resetPart('bows'); resetPart('extras');
-    document.getElementById("basePrice").value = ""; 
-    document.getElementById("btn-save-flower").innerText = "บันทึกออเดอร์";
-    switchPage('orders');
-}
 
     function editOrder(index) {
         const o = orders[index];
@@ -488,11 +489,8 @@
         listDiv.innerHTML = filtered.map((o) => {
             const realIdx = orders.findIndex(orig => orig.id === o.id);
             const isCutter = o.type === 'เครื่องตัด';
-            
-            /* แก้ไขตรงนี้: แยกสี accent และ bg ระหว่าง ดอกไม้ กับ เครื่องตัด */
             const accent = isCutter ? 'var(--cutter-color)' : 'var(--pink-dark)';
             const bg = isCutter ? '#f0f9f8' : '#fff5f8';
-            
             const total = cleanPrice(o.total), deposit = o.deposit || 0, remaining = total - deposit;
             
             return `<div class="order-item" style="border-left: 8px solid ${accent}; background: ${bg};">
@@ -530,7 +528,7 @@
         let body = isReceipt ? `ลูกค้า: คุณ ${o.name}<br>` : `👤 <b>ลูกค้า:</b> ${o.name}<br>`;
         
         if (o.type === 'เครื่องตัด') {
-            body += `รายการ: งานเครื่องตัด<br>`;
+            body += `รายการ: งานเครื่องตัด${o.details.hasSwitch ? ' (สวิตช์)' : ''} x${o.details.qty || 1} ชิ้น<br>`;
         } else {
             let fTxt = []; for (let t in o.details.flowers) { for (let c in o.details.flowers[t]) if (o.details.flowers[t][c] > 0) fTxt.push(`${c}${t==='กริตเตอร์'?'(กริต)':''} x${o.details.flowers[t][c]}`); }
             let exTxt = Object.keys(o.details.extras).filter(ex => o.details.extras[ex] > 0);
@@ -597,11 +595,9 @@
     function renderSummary() {
         const totalSales = orders.reduce((s, o) => s + cleanPrice(o.total), 0);
         const cost = costs.reduce((s, c) => s + (Number(c.amount) || 0), 0);
-        
         const flowerOrders = orders.filter(o => o.type === 'ดอกไม้');
         const fPaid = flowerOrders.reduce((s, o) => s + (o.paid ? cleanPrice(o.total) : (o.deposit || 0)), 0);
         const fPending = flowerOrders.reduce((s, o) => s + (o.paid ? 0 : (cleanPrice(o.total) - (o.deposit || 0))), 0);
-        
         const cutterOrders = orders.filter(o => o.type === 'เครื่องตัด');
         const cPaid = cutterOrders.reduce((s, o) => s + (o.paid ? cleanPrice(o.total) : (o.deposit || 0)), 0);
         const cPending = cutterOrders.reduce((s, o) => s + (o.paid ? 0 : (cleanPrice(o.total) - (o.deposit || 0))), 0);
@@ -609,13 +605,10 @@
         document.getElementById("stat-sale").innerText = totalSales.toLocaleString();
         document.getElementById("stat-cost").innerText = cost.toLocaleString();
         document.getElementById("stat-profit").innerText = (totalSales - cost).toLocaleString();
-        
         document.getElementById("pay-flower-done").innerText = fPaid.toLocaleString();
         document.getElementById("pay-flower-pending").innerText = fPending.toLocaleString();
-        
         document.getElementById("pay-cutter-done").innerText = cPaid.toLocaleString();
         document.getElementById("pay-cutter-pending").innerText = cPending.toLocaleString();
-
         document.getElementById("cost-history-body").innerHTML = [...costs].reverse().map((c, i) => `<tr><td>${c.date}</td><td>${c.desc}</td><td>${Number(c.amount).toLocaleString()}</td><td><button onclick="deleteCost(${costs.length-1-i})" style="border:none; color:red; background:none;">ลบ</button></td></tr>`).join("");
     }
 
@@ -632,43 +625,50 @@
     function importData(e) { const reader = new FileReader(); reader.onload = (ev) => { const data = JSON.parse(ev.target.result); if (confirm("นำเข้าข้อมูล?")) { localStorage.setItem("metist_orders", JSON.stringify(data.orders)); localStorage.setItem("metist_costs", JSON.stringify(data.costs)); location.reload(); } }; reader.readAsText(e.target.files[0]); }
 
     function showTaskSummary() {
-    const pendingOrders = orders.filter(o => !o.status);
-    if (pendingOrders.length === 0) { alert("เย้! ไม่มีออเดอร์ค้างทำในขณะนี้ 🌸"); return; }
-    
-    let flowerSummary = {}; 
-    let cutterTotalQty = 0; // เปลี่ยนจากนับรายการเป็นนับจำนวนชิ้นรวม
+        const pendingOrders = orders.filter(o => !o.status);
+        if (pendingOrders.length === 0) { alert("เย้! ไม่มีออเดอร์ค้างทำในขณะนี้ 🌸"); return; }
+        
+        let flowerSummary = {}; 
+        let cutterNormalQty = 0; 
+        let cutterSwitchQty = 0; 
 
-    pendingOrders.forEach(o => {
-        let q = o.details.qty || 1; // ดึงจำนวนชิ้นออกมา ถ้าไม่มีให้เป็น 1
-        if (o.type === 'เครื่องตัด') {
-            cutterTotalQty += q;
-        } else {
-            const flowers = o.details.flowers;
-            for (let type in flowers) {
-                for (let color in flowers[type]) {
-                    if (flowers[type][color] > 0) {
-                        const key = `${color} (${type})`;
-                        flowerSummary[key] = (flowerSummary[key] || 0) + (flowers[type][color]);
+        pendingOrders.forEach(o => {
+            let q = o.details.qty || 1; 
+            if (o.type === 'เครื่องตัด') {
+                if (o.details.hasSwitch) {
+                    cutterSwitchQty += q;
+                } else {
+                    cutterNormalQty += q;
+                }
+            } else {
+                const flowers = o.details.flowers;
+                for (let type in flowers) {
+                    for (let color in flowers[type]) {
+                        if (flowers[type][color] > 0) {
+                            const key = `${color} (${type})`;
+                            flowerSummary[key] = (flowerSummary[key] || 0) + (flowers[type][color]);
+                        }
                     }
                 }
             }
-        }
-    });
+        });
 
-    let summaryHtml = `<div style="text-align:left; font-size:14px;"><p><b>📦 งานค้างทั้งหมด: ${pendingOrders.length} รายการ</b></p><hr>`;
-    if (cutterTotalQty > 0) summaryHtml += `<p style="color:var(--cutter-color); font-size:16px;"><b>✂️ งานเครื่องตัดรวม: ${cutterTotalQty} ชิ้น</b></p>`;
-    if (Object.keys(flowerSummary).length > 0) {
-        summaryHtml += `<p><b>🌹 ดอกไม้ที่ต้องเตรียม:</b></p><ul>`;
-        for (let f in flowerSummary) summaryHtml += `<li>${f}: ${flowerSummary[f]} ดอก</li>`;
-        summaryHtml += `</ul>`;
+        let summaryHtml = `<div style="text-align:left; font-size:14px;"><p><b>📦 งานค้างทั้งหมด: ${pendingOrders.length} รายการ</b></p><hr>`;
+        if (cutterNormalQty > 0) summaryHtml += `<p style="color:var(--cutter-color); font-size:16px; margin-bottom:5px;"><b>✂️ เครื่องตัด (ปกติ): ${cutterNormalQty} ชิ้น</b></p>`;
+        if (cutterSwitchQty > 0) summaryHtml += `<p style="color:var(--purple-dark); font-size:16px; margin-top:0;"><b>🔘 เครื่องตัด (สวิตช์): ${cutterSwitchQty} ชิ้น</b></p>`;
+        
+        if (Object.keys(flowerSummary).length > 0) {
+            summaryHtml += `<p><b>🌹 ดอกไม้ที่ต้องเตรียม:</b></p><ul>`;
+            for (let f in flowerSummary) summaryHtml += `<li>${f}: ${flowerSummary[f]} ดอก</li>`;
+            summaryHtml += `</ul>`;
+        }
+        summaryHtml += `</div>`;
+        document.getElementById("receipt-title").innerText = "📋 สรุปสิ่งที่ต้องเตรียม";
+        document.getElementById("rc-date").innerText = "ข้อมูล ณ วันที่: " + new Date().toLocaleDateString('th-TH');
+        document.getElementById("modal-body").innerHTML = summaryHtml;
+        document.getElementById("receipt-extras").style.display = "none";
+        document.getElementById("receiptModal").style.display = "block";
     }
-    summaryHtml += `</div>`;
-    document.getElementById("receipt-title").innerText = "📋 สรุปสิ่งที่ต้องเตรียม";
-    document.getElementById("rc-date").innerText = "ข้อมูล ณ วันที่: " + new Date().toLocaleDateString('th-TH');
-    document.getElementById("modal-body").innerHTML = summaryHtml;
-    document.getElementById("receipt-extras").style.display = "none";
-    document.getElementById("receiptModal").style.display = "block";
-}
 
     document.getElementById("paper-grid").innerHTML = ["ดำ", "ขาว", "ชมพู", "แดง"].map(c => `<button class="square-btn" style="background:${colors[c]}; color:${c==='ขาว'?'#555':'#fff'}" onclick="selectedPapers.push('${c}'); document.getElementById('paperChoice').innerText='เลือก: '+selectedPapers.join(',')">${c}</button>`).join("");
     document.getElementById("bow-grid").innerHTML = ["แดง", "ขาว", "ชมพู", "น้ำเงิน", "ม่วง", "ชมพูแก้ว", "แดงแก้ว"].map(c => `<button class="square-btn" style="background:${colors[c]}; color:${c==='ขาว'?'#555':'#fff'}" onclick="selectedBows.push('${c}'); document.getElementById('bowChoice').innerText='เลือก: '+selectedBows.join(',')">${c}</button>`).join("");
