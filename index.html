@@ -1,13 +1,14 @@
 <!DOCTYPE html>
 <html lang="th">
 <head>
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=0">
     <title>METIST - Flower studio</title>
     
     <link rel="apple-touch-icon" href="logo.png.jpg">
     <link rel="icon" type="image/png" href="logo.png.jpg">
-    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-applet-capable" content="yes">
     <meta name="apple-mobile-web-app-status-bar-style" content="default">
     <meta name="apple-mobile-web-app-title" content="METIST">
 
@@ -25,14 +26,7 @@
             --cutter-color: #26a69a; 
         }
 
-        body {
-            font-family: 'Segoe UI', Tahoma, sans-serif;
-            background: var(--bg);
-            margin: 0;
-            padding: 15px;
-            color: var(--text);
-        }
-
+        body { font-family: 'Segoe UI', Tahoma, sans-serif; background: var(--bg); margin: 0; padding: 15px; color: var(--text); }
         .header { text-align: center; margin-bottom: 15px; }
         .header h1 { color: var(--pink-dark); margin: 0; font-size: 1.8rem; }
         .header p { color: #bca0a0; margin: 0; font-size: 0.8rem; letter-spacing: 2px; }
@@ -48,86 +42,26 @@
 
         .page { display: none; }
         .page.active { display: block; }
-        .card { 
-            background: #fff; 
-            border-radius: 20px; 
-            padding: 18px; 
-            margin-bottom: 15px; 
-            box-shadow: 0 8px 20px rgba(212, 131, 152, 0.12);
-            position: relative;
-        }
+        .card { background: #fff; border-radius: 20px; padding: 18px; margin-bottom: 15px; box-shadow: 0 8px 20px rgba(212, 131, 152, 0.12); position: relative; }
         h2 { font-size: 1.1rem; margin-top: 0; margin-bottom: 12px; }
         
-        .btn-reset-mini {
-            position: absolute;
-            top: 15px;
-            right: 15px;
-            background: #eee;
-            color: #888;
-            border: none;
-            border-radius: 8px;
-            padding: 4px 8px;
-            font-size: 10px;
-            font-weight: bold;
-            cursor: pointer;
-        }
+        .btn-reset-mini { position: absolute; top: 15px; right: 15px; background: #eee; color: #888; border: none; border-radius: 8px; padding: 4px 8px; font-size: 10px; font-weight: bold; cursor: pointer; }
         .btn-reset-mini:active { background: #ddd; }
 
         .input-row { display: flex; gap: 8px; align-items: center; margin-bottom: 8px; }
-        input { 
-            width: 100%; 
-            padding: 12px; 
-            border-radius: 14px; 
-            border: 1px solid #f2cbd3; 
-            box-sizing: border-box; 
-            font-size: 16px; 
-        }
+        input { width: 100%; padding: 12px; border-radius: 14px; border: 1px solid #f2cbd3; box-sizing: border-box; font-size: 16px; }
         .shipping-input { width: 100px; flex-shrink: 0; }
         
-        .btn-cutter {
-            background: var(--pink);
-            border: 1px solid #f2cbd3;
-            border-radius: 14px;
-            padding: 12px 15px;
-            font-size: 18px;
-            cursor: pointer;
-            box-shadow: 0 4px 6px rgba(0,0,0,0.05);
-            color: var(--pink-dark);
-        }
+        .btn-cutter { background: var(--pink); border: 1px solid #f2cbd3; border-radius: 14px; padding: 12px 15px; font-size: 18px; cursor: pointer; box-shadow: 0 4px 6px rgba(0,0,0,0.05); color: var(--pink-dark); }
 
-        .flower-flex-container { 
-            display: flex !important;
-            flex-direction: row !important;
-            justify-content: flex-start; 
-            flex-wrap: nowrap; 
-            gap: 10px; 
-            margin-bottom: 15px; 
-            overflow-x: auto; 
-            padding-bottom: 10px;
-            width: 100%;
-        }
-
-        .color-item { 
-            flex: 0 0 65px; 
-            text-align: center; 
-            min-width: 65px; 
-            cursor: pointer; 
-        }
-        .color-btn { 
-            width: 45px; height: 45px; border-radius: 50%; 
-            border: 2px solid #fff; outline: 1px solid #eee;
-            box-shadow: 0 4px 8px rgba(0,0,0,0.1); 
-            margin: 0 auto; display: block; 
-        }
+        .flower-flex-container { display: flex !important; flex-direction: row !important; justify-content: flex-start; flex-wrap: nowrap; gap: 10px; margin-bottom: 15px; overflow-x: auto; padding-bottom: 10px; width: 100%; }
+        .color-item { flex: 0 0 65px; text-align: center; min-width: 65px; cursor: pointer; }
+        .color-btn { width: 45px; height: 45px; border-radius: 50%; border: 2px solid #fff; outline: 1px solid #eee; box-shadow: 0 4px 8px rgba(0,0,0,0.1); margin: 0 auto; display: block; }
         .count { font-size: 9px; margin-top: 5px; font-weight: bold; line-height: 1.2; }
 
         .type-selector { display: flex; gap: 10px; background: #fff0f3; padding: 8px; border-radius: 12px; justify-content: center; margin-bottom: 15px; font-size: 13px; }
         .grid-options { display: grid; grid-template-columns: repeat(4, 1fr); gap: 8px; }
-        .square-btn { 
-            border: 1px solid rgba(0,0,0,0.05); border-radius: 10px; padding: 10px 2px; 
-            color: #fff; cursor: pointer; font-size: 11px; font-weight: bold; 
-            text-shadow: 1px 1px 2px rgba(0,0,0,0.2);
-        }
+        .square-btn { border: 1px solid rgba(0,0,0,0.05); border-radius: 10px; padding: 10px 2px; color: #fff; cursor: pointer; font-size: 11px; font-weight: bold; text-shadow: 1px 1px 2px rgba(0,0,0,0.2); }
 
         .order-tabs { display: flex; gap: 5px; margin-bottom: 10px; padding: 0 5px; }
         .order-tabs button { flex: 1; padding: 8px; border: none; border-radius: 10px; font-size: 10px; font-weight: bold; background: #eee; color: #888; cursor: pointer; }
@@ -148,28 +82,14 @@
         .modal { display: none; position: fixed; z-index: 1000; left: 0; top: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.6); overflow-y: auto; }
         .modal-content { background: white; width: 85%; max-width: 320px; margin: 40px auto; padding: 20px; border-radius: 25px; text-align: center; }
         
-        .receipt-border { 
-            border: 2px dashed var(--pink-dark); 
-            border-radius: 20px; 
-            padding: 20px; 
-            width: 100%; 
-            box-sizing: border-box; 
-            margin: 0 auto;
-            display: flex;
-            flex-direction: column;
-            align-items: center; 
-        }
-        
+        .receipt-border { border: 2px dashed var(--pink-dark); border-radius: 20px; padding: 20px; width: 100%; box-sizing: border-box; margin: 0 auto; display: flex; flex-direction: column; align-items: center; }
         .receipt-details { width: 100%; text-align: left; font-size: 0.9rem; line-height: 1.7; margin: 15px 0; border-top: 1px solid #f2f2f2; padding-top: 10px; }
         
-        #receipt-extras {
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            justify-content: center;
-            width: 100%;
-            margin-top: 5px;
-        }
+        #receipt-extras { display: flex; flex-direction: column; align-items: center; justify-content: center; width: 100%; margin-top: 5px; }
+
+        /* สไตล์ปุ่มคัดลอก และปุ่มสลิปที่เพิ่มใหม่ */
+        .btn-copy-address { background: #f0f0f0; color: #555; padding: 4px 8px; border-radius: 8px; font-size: 10px; border: 1px solid #ddd; cursor: pointer; font-weight: bold; margin-left: 5px; }
+        .btn-view-slip { background: #fff0f3; color: var(--pink-dark); padding: 4px 8px; border-radius: 8px; font-size: 10px; border: 1px solid var(--pink); cursor: pointer; font-weight: bold; }
     </style>
 </head>
 <body>
@@ -182,6 +102,7 @@
 <div class="nav-menu">
     <button id="btn-flower" class="active" onclick="switchPage('flower')">สั่งดอกไม้ <span class="en-sub">Flower</span></button>
     <button id="btn-orders" onclick="switchPage('orders')">ออเดอร์ <span id="nav-pending" style="color:red"></span><span class="en-sub">Order List</span></button>
+    <button id="btn-admin" onclick="switchPage('admin')">ออนไลน์ <span id="nav-cloud" style="color:var(--purple-dark)"></span><span class="en-sub">Online</span></button>
     <button id="btn-summary" onclick="switchPage('summary')">สรุปยอด <span class="en-sub">Summary</span></button>
 </div>
 
@@ -191,6 +112,9 @@
         <input id="basePrice" type="number" style="width: 100px; flex-shrink: 0;" placeholder="ราคา" oninput="calcTotal()">
         <input id="ship-flower" type="number" class="shipping-input" placeholder="ค่าส่ง" oninput="calcTotal()">
         <button class="btn-cutter" onclick="saveOrder('เครื่องตัด')" title="บันทึกเครื่องตัด">✂️</button>
+    </div>
+    <div class="input-row" style="margin-top: 10px;">
+        <input id="admin-address" placeholder="ที่อยู่ลูกค้า (ถ้ามี)...">
     </div>
     <div class="card">
         <h2>🌹 สีดอกไม้</h2>
@@ -245,6 +169,16 @@
     <div id="order-list"></div>
 </div>
 
+<div id="page-admin" class="page">
+    <div class="card" style="background:var(--purple); text-align:center; border: 1px solid var(--purple-dark);">
+        <h2 style="color:var(--text); margin-bottom:5px;">☁️ ดึงออเดอร์จากลูกค้า (Cloud)</h2>
+        <button onclick="fetchCloudOrders()" style="padding:8px 15px; background:var(--purple-dark); color:white; border:none; border-radius:10px; font-size:12px; cursor:pointer;">🔄 เช็คออเดอร์ใหม่</button>
+    </div>
+    <div id="cloud-list">
+        <div style="text-align:center; padding:20px; color:gray;">กดปุ่ม "เช็คออเดอร์ใหม่" เพื่อดูข้อมูล</div>
+    </div>
+</div> 
+
 <div id="page-summary" class="page">
     <div class="summary-grid">
         <div class="summary-box" style="background:var(--green)"><span>ยอดขายรวม</span><div id="stat-sale">0</div></div>
@@ -279,9 +213,10 @@
 
     <div class="card" style="border: 1px solid var(--pink); background: #fff5f8;">
         <h3>💾 จัดการข้อมูล (Backup)</h3>
-        <div style="display: flex; gap: 10px;">
-            <button onclick="exportData()" style="flex: 1; background: #51cf66; color: white; padding: 12px; border: none; border-radius: 12px; font-weight: bold; cursor: pointer;">ส่งออกข้อมูล</button>
-            <button onclick="document.getElementById('importFile').click()" style="flex: 1; background: #fab005; color: white; padding: 12px; border: none; border-radius: 12px; font-weight: bold; cursor: pointer;">นำเข้าข้อมูล</button>
+        <div style="display: flex; gap: 10px; flex-wrap: wrap;">
+            <button onclick="exportData()" style="flex: 1; min-width: 100px; background: #51cf66; color: white; padding: 12px; border: none; border-radius: 12px; font-weight: bold; cursor: pointer;">ส่งออกข้อมูล</button>
+            <button onclick="document.getElementById('importFile').click()" style="flex: 1; min-width: 100px; background: #fab005; color: white; padding: 12px; border: none; border-radius: 12px; font-weight: bold; cursor: pointer;">นำเข้าข้อมูล</button>
+            <button onclick="clearAllData()" style="flex: 1; min-width: 100px; background: #ff6b6b; color: white; padding: 12px; border: none; border-radius: 12px; font-weight: bold; cursor: pointer;">ล้างระบบใหม่</button>
         </div>
         <input type="file" id="importFile" style="display:none" accept=".json" onchange="importData(event)">
     </div>
@@ -300,7 +235,7 @@
             <tbody id="cost-history-body"></tbody>
         </table>
     </div>
-</div>
+</div> 
 
 <div id="receiptModal" class="modal">
     <div class="modal-content">
@@ -319,363 +254,469 @@
 </div>
 
 <script>
-    let orders = JSON.parse(localStorage.getItem("metist_orders") || "[]");
-    let costs = JSON.parse(localStorage.getItem("metist_costs") || "[]");
-    let orderBeingEdited = null;
-    let currentFilter = 'all';
+// --- ส่วนการตั้งค่า SUPABASE ---
+const SUPABASE_URL = 'https://hcxegxzyaeckcfybqmuw.supabase.co';
+const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImhjeGVneHp5YWVja2NmeWJxbXV3Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzI3Njk2NDAsImV4cCI6MjA4ODM0NTY0MH0.V24YgTlKrFL9LpzUFI8O9beRA9olxW-LYvsaMaVuO4w';
+const _supabase = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
 
-    const colors = { แดง: "#e63946", ขาว: "#ffffff", ชมพู: "#f7b2cc", น้ำเงิน: "#457b9d", ม่วง: "#9b5de5", ดำ: "#333333", ชมพูแก้ว: "#ff007f", แดงแก้ว: "#b91d1d" };
-    const extraPrice = { ผีเสื้อ: 5, มงกุฎ: 10, ไฟLED: 25, ไข่มุก: 0, ขอบลูกไม้: 0, ขอบมุก: 0, การ์ด: 0 };
+// ข้อมูลหลัก
+let orders = JSON.parse(localStorage.getItem("metist_orders") || "[]");
+let costs = JSON.parse(localStorage.getItem("metist_costs") || "[]");
+let orderBeingEdited = null;
+let currentFilter = 'all';
 
-    let currentFlowerData = { "พื้น": {}, "กริตเตอร์": {} };
-    let selectedPapers = []; 
-    let selectedBows = []; 
-    let selectedExtras = {};
+const colors = { แดง: "#e63946", ขาว: "#ffffff", ชมพู: "#f7b2cc", น้ำเงิน: "#457b9d", ม่วง: "#9b5de5", ดำ: "#333333", ชมพูแก้ว: "#ff007f", แดงแก้ว: "#b91d1d" };
+const extraPrice = { ผีเสื้อ: 5, มงกุฎ: 10, ไฟLED: 25, ไข่มุก: 0, ขอบลูกไม้: 0, ขอบมุก: 0, การ์ด: 0 };
 
-    const cleanPrice = (val) => typeof val === 'number' ? val : parseFloat(String(val).replace(/[^0-9.]/g, '')) || 0;
+let currentFlowerData = { "พื้น": {}, "กริตเตอร์": {} };
+let selectedPapers = []; 
+let selectedBows = []; 
+let selectedExtras = {};
 
-    function resetPart(part) {
-        if (part === 'flowers') {
-            currentFlowerData = { "พื้น": {}, "กริตเตอร์": {} };
-            renderFlowers();
-        } else if (part === 'papers') {
-            selectedPapers = [];
-            document.getElementById('paperChoice').innerText = "เลือก: -";
-        } else if (part === 'bows') {
-            selectedBows = [];
-            document.getElementById('bowChoice').innerText = "เลือก: -";
-        } else if (part === 'extras') {
-            selectedExtras = {};
-            document.getElementById('extraChoice').innerText = "เลือก: -";
-        }
-        calcTotal();
+const cleanPrice = (val) => typeof val === 'number' ? val : parseFloat(String(val).replace(/[^0-9.]/g, '')) || 0;
+
+// ฟังก์ชันคัดลอกที่อยู่
+function copyToClipboard(text) {
+    if(!text) { alert("ไม่มีข้อมูลที่อยู่ให้คัดลอกครับ"); return; }
+    navigator.clipboard.writeText(text).then(() => {
+        alert("คัดลอกที่อยู่ลงเครื่องแล้วครับ ✅");
+    }).catch(err => {
+        alert("คัดลอกไม่สำเร็จ: " + err);
+    });
+}
+
+function resetPart(part) {
+    if (part === 'flowers') {
+        currentFlowerData = { "พื้น": {}, "กริตเตอร์": {} };
+        renderFlowers();
+    } else if (part === 'papers') {
+        selectedPapers = [];
+        document.getElementById('paperChoice').innerText = "เลือก: -";
+    } else if (part === 'bows') {
+        selectedBows = [];
+        document.getElementById('bowChoice').innerText = "เลือก: -";
+    } else if (part === 'extras') {
+        selectedExtras = {};
+        document.getElementById('extraChoice').innerText = "เลือก: -";
+    }
+    calcTotal();
+}
+
+function switchPage(pageId) {
+    document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
+    document.querySelectorAll('.nav-menu button').forEach(b => b.classList.remove('active'));
+    document.getElementById('page-' + pageId).classList.add('active');
+    document.getElementById('btn-' + pageId).classList.add('active');
+    if(pageId === 'orders') renderOrderList();
+    if(pageId === 'summary') renderSummary();
+    if(pageId === 'admin') fetchCloudOrders(); 
+    updatePendingNav();
+}
+
+function renderFlowers() {
+    const flowerList = ["แดง", "ขาว", "ชมพู", "น้ำเงิน", "ม่วง"];
+    document.getElementById("flower-grid").innerHTML = flowerList.map(c => `
+        <div class="color-item" onclick="addFlower('${c}')">
+            <div class="color-btn" style="background:${colors[c]}"></div>
+            <div class="count">${c}<br>พื้น:${currentFlowerData["พื้น"][c]||0} กริต:${currentFlowerData["กริตเตอร์"][c]||0}</div>
+        </div>`).join("");
+}
+
+function addFlower(color) {
+    const type = document.querySelector('input[name="flowerType"]:checked').value;
+    currentFlowerData[type][color] = (currentFlowerData[type][color] || 0) + 1;
+    renderFlowers(); calcTotal();
+}
+
+function renderExtraChoice() {
+    let selectedList = Object.keys(selectedExtras).filter(e => selectedExtras[e] > 0);
+    document.getElementById('extraChoice').innerText = "เลือก: " + (selectedList.join(", ") || "-");
+}
+
+function calcTotal() {
+    let base = Number(document.getElementById("basePrice").value || 0);
+    let ship = Number(document.getElementById("ship-flower").value || 0);
+    let extraTotal = 0;
+    Object.keys(selectedExtras).forEach(e => extraTotal += (selectedExtras[e] * extraPrice[e]));
+    let total = base + extraTotal + ship;
+    document.getElementById("summary-text").innerText = `ราคารวม: ${total} บาท`;
+    return total;
+}
+
+function saveOrder(productType) {
+    let name = document.getElementById("customer").value;
+    let address = document.getElementById("admin-address").value; // ที่อยู่
+    if(!name) { alert("กรุณาใส่ชื่อลูกค้า"); return; }
+    
+    let shipping = Number(document.getElementById("ship-flower").value || 0);
+    let basePrice = document.getElementById("basePrice").value;
+    let total = calcTotal();
+    let qty = 1; 
+    let hasSwitch = false;
+
+    if (productType === 'เครื่องตัด' && orderBeingEdited === null) {
+        hasSwitch = confirm("ต้องการติด 'สวิตช์' ด้วยหรือไม่?");
+        let qtyInput = prompt(`ระบุจำนวนเครื่องตัด${hasSwitch ? '' : ''}ที่ต้องการ`, "1");
+        if (qtyInput === null) return; 
+        qty = parseInt(qtyInput) || 1;
+        if (qty > 10) qty = 10;
+        if (qty < 1) qty = 1;
     }
 
-    function switchPage(pageId) {
-        document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
-        document.querySelectorAll('.nav-menu button').forEach(b => b.classList.remove('active'));
-        document.getElementById('page-' + pageId).classList.add('active');
-        document.getElementById('btn-' + pageId).classList.add('active');
-        if(pageId === 'orders') renderOrderList();
-        if(pageId === 'summary') renderSummary();
-        updatePendingNav();
-    }
+    let details = (productType === 'เครื่องตัด') 
+        ? { isCutter: true, basePrice, qty: qty, hasSwitch: hasSwitch, address: address } 
+        : { flowers: JSON.parse(JSON.stringify(currentFlowerData)), paper: selectedPapers.join(", "), bow: selectedBows.join(", "), extras: {...selectedExtras}, basePrice: basePrice, qty: 1, address: address };
 
-    function renderFlowers() {
-        const flowerList = ["แดง", "ขาว", "ชมพู", "น้ำเงิน", "ม่วง"];
-        document.getElementById("flower-grid").innerHTML = flowerList.map(c => `
-            <div class="color-item" onclick="addFlower('${c}')">
-                <div class="color-btn" style="background:${colors[c]}"></div>
-                <div class="count">${c}<br>พื้น:${currentFlowerData["พื้น"][c]||0} กริต:${currentFlowerData["กริตเตอร์"][c]||0}</div>
-            </div>`).join("");
-    }
-
-    function addFlower(color) {
-        const type = document.querySelector('input[name="flowerType"]:checked').value;
-        currentFlowerData[type][color] = (currentFlowerData[type][color] || 0) + 1;
-        renderFlowers(); calcTotal();
-    }
-
-    function renderExtraChoice() {
-        let selectedList = Object.keys(selectedExtras).filter(e => selectedExtras[e] > 0);
-        document.getElementById('extraChoice').innerText = "เลือก: " + (selectedList.join(", ") || "-");
-    }
-
-    function calcTotal() {
-        let base = Number(document.getElementById("basePrice").value || 0);
-        let ship = Number(document.getElementById("ship-flower").value || 0);
-        let extraTotal = 0;
-        Object.keys(selectedExtras).forEach(e => extraTotal += (selectedExtras[e] * extraPrice[e]));
-        let total = base + extraTotal + ship;
-        document.getElementById("summary-text").innerText = `ราคารวม: ${total} บาท`;
-        return total;
-    }
-
-    function saveOrder(productType) {
-        let name = document.getElementById("customer").value;
-        if(!name) { alert("กรุณาใส่ชื่อลูกค้า"); return; }
-        
-        let shipping = Number(document.getElementById("ship-flower").value || 0);
-        let basePrice = document.getElementById("basePrice").value;
-        let total = calcTotal();
-        let qty = 1; 
-        let hasSwitch = false;
-
-        if (productType === 'เครื่องตัด' && orderBeingEdited === null) {
-            hasSwitch = confirm("ต้องการติด 'สวิตช์' ด้วยหรือไม่?");
-            
-            let qtyInput = prompt(`ระบุจำนวนเครื่องตัด${hasSwitch ? '' : ''}ที่ต้องการ`, "1");
-            if (qtyInput === null) return; 
-            qty = parseInt(qtyInput) || 1;
-            if (qty > 10) qty = 10;
-            if (qty < 1) qty = 1;
-        }
-
-        let details = (productType === 'เครื่องตัด') 
-            ? { isCutter: true, basePrice, qty: qty, hasSwitch: hasSwitch } 
-            : { flowers: JSON.parse(JSON.stringify(currentFlowerData)), paper: selectedPapers.join(", "), bow: selectedBows.join(", "), extras: {...selectedExtras}, basePrice: basePrice, qty: 1 };
-
-        if (orderBeingEdited !== null) {
-            let oldQty = orders[orderBeingEdited].details.qty || 1;
-            let oldSwitch = orders[orderBeingEdited].details.hasSwitch || false;
-            orders[orderBeingEdited] = { ...orders[orderBeingEdited], name, total, shipping, details: {...details, qty: oldQty, hasSwitch: oldSwitch}, type: productType };
-            orderBeingEdited = null;
-        } else {
-            let displayName = name + (hasSwitch ? " (สวิตช์)" : "") + (qty > 1 ? ` (${qty} ชิ้น)` : "");
-            orders.push({ 
-                id: Date.now(), 
-                name: displayName, 
-                type: productType, 
-                total, 
-                shipping, 
-                details, 
-                date: new Date().toLocaleDateString('th-TH'), 
-                status: false, 
-                paid: false, 
-                deposit: 0 
-            });
-        }
-
-        updateStore();
-        document.getElementById("customer").value = ""; 
-        document.getElementById("ship-flower").value = "";
-        resetPart('flowers'); resetPart('papers'); resetPart('bows'); resetPart('extras');
-        document.getElementById("basePrice").value = ""; 
-        document.getElementById("btn-save-flower").innerText = "บันทึกออเดอร์";
-        switchPage('orders');
-    }
-
-    function editOrder(index) {
-        const o = orders[index];
-        orderBeingEdited = index;
-        switchPage('flower');
-        document.getElementById("customer").value = o.name;
-        document.getElementById("ship-flower").value = o.shipping;
-        document.getElementById("basePrice").value = o.details.basePrice || "";
-        
-        if (o.type === 'ดอกไม้') {
-            currentFlowerData = JSON.parse(JSON.stringify(o.details.flowers));
-            selectedPapers = o.details.paper ? o.details.paper.split(",").filter(x => x.trim() !== "") : [];
-            selectedBows = o.details.bow ? o.details.bow.split(",").filter(x => x.trim() !== "") : [];
-            selectedExtras = {...o.details.extras};
-            document.getElementById("paperChoice").innerText = "เลือก: " + (o.details.paper || "-");
-            document.getElementById("bowChoice").innerText = "เลือก: " + (o.details.bow || "-");
-            renderFlowers(); renderExtraChoice();
-        }
-        calcTotal();
-        document.getElementById("btn-save-flower").innerText = "อัปเดตออเดอร์ (แก้ไข)";
-    }
-
-    function filterType(type) {
-        currentFilter = type;
-        document.querySelectorAll('.order-tabs button').forEach(b => b.classList.remove('active'));
-        document.getElementById('tab-' + type).classList.add('active');
-        renderOrderList();
-    }
-
-    function renderOrderList() {
-        const listDiv = document.getElementById("order-list");
-        const search = document.getElementById("searchOrder").value.toLowerCase();
-        
-        let filtered = orders.filter(o => {
-            const matchSearch = o.name.toLowerCase().includes(search);
-            const matchFilter = currentFilter === 'all' || o.type === currentFilter;
-            return matchSearch && matchFilter;
+    if (orderBeingEdited !== null) {
+        let oldQty = orders[orderBeingEdited].details.qty || 1;
+        let oldSwitch = orders[orderBeingEdited].details.hasSwitch || false;
+        orders[orderBeingEdited] = { ...orders[orderBeingEdited], name, total, shipping, details: {...details, qty: oldQty, hasSwitch: oldSwitch}, type: productType };
+        orderBeingEdited = null;
+    } else {
+        let displayName = name + (hasSwitch ? " (สวิตช์)" : "") + (qty > 1 ? ` (${qty} ชิ้น)` : "");
+        orders.push({ 
+            id: Date.now(), 
+            name: displayName, 
+            type: productType, 
+            total, 
+            shipping, 
+            details, 
+            date: new Date().toLocaleDateString('th-TH'), 
+            status: false, 
+            paid: false, 
+            deposit: 0 
         });
-
-        filtered.sort((a, b) => (a.status !== b.status) ? (a.status ? 1 : -1) : (b.id - a.id));
-        document.getElementById("pending-count").innerText = `รอดำเนินการ: ${orders.filter(o => !o.status).length}`;
-        
-        listDiv.innerHTML = filtered.map((o) => {
-            const realIdx = orders.findIndex(orig => orig.id === o.id);
-            const isCutter = o.type === 'เครื่องตัด';
-            const accent = isCutter ? 'var(--cutter-color)' : 'var(--pink-dark)';
-            const bg = isCutter ? '#f0f9f8' : '#fff5f8';
-            const total = cleanPrice(o.total), deposit = o.deposit || 0, remaining = total - deposit;
-            
-            return `<div class="order-item" style="border-left: 8px solid ${accent}; background: ${bg};">
-                    <div style="display:flex; justify-content:space-between; font-size:11px; font-weight:bold; color:${accent}">
-                        <span>${isCutter ? '✂️ CUTTER' : '🌸 FLOWER'} ${o.status ? '✅' : '⏳'}</span>
-                        <span style="color:gray">${o.date}</span>
-                    </div>
-                    <div style="margin:5px 0"><b>👤 ${o.name}</b> ${o.shipping > 0 ? `<small style="color:#ff6b6b">(ส่ง +${o.shipping})</small>` : ''}</div>
-                    <div style="font-weight:bold">ยอดทั้งหมด: ${total.toLocaleString()} ฿</div>
-                    ${deposit > 0 ? `<div style="font-size:11px; color:#666;">มัดจำแล้ว: <span style="color:#51cf66; font-weight:bold;">${deposit.toLocaleString()} ฿</span></div><div style="font-size:11px; color:#ff6b6b; margin-bottom:5px;">คงเหลือ: <b>${remaining.toLocaleString()} ฿</b></div>` : ''}
-                    <div class="btn-group">
-                        <button class="status-btn" style="background:${o.status ? '#51cf66' : '#ff6b6b'}; flex:1" onclick="toggleStatus(${realIdx})">${o.status ? 'ทำแล้ว' : 'รอดำเนินการ'}</button>
-                        <button class="status-btn" style="background:${o.paid ? '#51cf66' : '#ff6b6b'}; flex:1" onclick="togglePaid(${realIdx})">${o.paid ? 'จ่ายครบแล้ว' : 'ยังไม่ครบ'}</button>
-                    </div>
-                    <div class="btn-group">
-                        <button class="status-btn" style="background:white; color:${accent}; border:1px solid ${accent}; flex:1" onclick="setDeposit(${realIdx})">มัดจำ</button>
-                        <button class="status-btn" style="background:white; color:${accent}; border:1px solid ${accent}; flex:1" onclick="openPopup(${realIdx}, 'order')">รายละเอียด</button>
-                        <button class="status-btn" style="background:white; color:${accent}; border:1px solid ${accent}; flex:1" onclick="openPopup(${realIdx}, 'receipt')">ใบเสร็จ</button>
-                    </div>
-                    <div class="btn-group">
-                        <button class="status-btn" style="background:white; color:${accent}; border:1px solid ${accent}; flex:1" onclick="editOrder(${realIdx})">แก้ไขออเดอร์</button>
-                        <button class="status-btn" style="background:#eee; color:#999; width:35px" onclick="deleteOrder(${realIdx})">🗑️</button>
-                    </div>
-                </div>`;
-        }).join("");
     }
 
-    function openPopup(i, mode) {
-        const o = orders[i]; const isReceipt = mode === 'receipt';
+    updateStore(); 
+    document.getElementById("customer").value = ""; 
+    document.getElementById("admin-address").value = "";
+    document.getElementById("ship-flower").value = "";
+    resetPart('flowers'); resetPart('papers'); resetPart('bows'); resetPart('extras');
+    document.getElementById("basePrice").value = ""; 
+    document.getElementById("btn-save-flower").innerText = "บันทึกออเดอร์";
+    switchPage('orders');
+}
+
+function editOrder(index) {
+    const o = orders[index];
+    orderBeingEdited = index;
+    switchPage('flower');
+    document.getElementById("customer").value = o.name;
+    document.getElementById("admin-address").value = o.details.address || "";
+    document.getElementById("ship-flower").value = o.shipping;
+    document.getElementById("basePrice").value = o.details.basePrice || "";
+    
+    if (o.type === 'ดอกไม้') {
+        currentFlowerData = JSON.parse(JSON.stringify(o.details.flowers));
+        selectedPapers = o.details.paper ? o.details.paper.split(",").filter(x => x.trim() !== "") : [];
+        selectedBows = o.details.bow ? o.details.bow.split(",").filter(x => x.trim() !== "") : [];
+        selectedExtras = {...o.details.extras};
+        document.getElementById("paperChoice").innerText = "เลือก: " + (o.details.paper || "-");
+        document.getElementById("bowChoice").innerText = "เลือก: " + (o.details.bow || "-");
+        renderFlowers(); renderExtraChoice();
+    }
+    calcTotal();
+    document.getElementById("btn-save-flower").innerText = "อัปเดตออเดอร์ (แก้ไข)";
+}
+
+function filterType(type) {
+    currentFilter = type;
+    document.querySelectorAll('.order-tabs button').forEach(b => b.classList.remove('active'));
+    document.getElementById('tab-' + type).classList.add('active');
+    renderOrderList();
+}
+
+function renderOrderList() {
+    const listDiv = document.getElementById("order-list");
+    const search = document.getElementById("searchOrder").value.toLowerCase();
+    
+    let filtered = orders.filter(o => {
+        const matchSearch = o.name.toLowerCase().includes(search);
+        const matchFilter = currentFilter === 'all' || o.type === currentFilter;
+        return matchSearch && matchFilter;
+    });
+
+    filtered.sort((a, b) => (a.status !== b.status) ? (a.status ? 1 : -1) : (b.id - a.id));
+    document.getElementById("pending-count").innerText = `รอดำเนินการ: ${orders.filter(o => !o.status).length}`;
+    
+    listDiv.innerHTML = filtered.map((o) => {
+        const realIdx = orders.findIndex(orig => orig.id === o.id);
+        const isCutter = o.type === 'เครื่องตัด';
+        const accent = isCutter ? 'var(--cutter-color)' : 'var(--pink-dark)';
+        const bg = isCutter ? '#f0f9f8' : '#fff5f8';
         const total = cleanPrice(o.total), deposit = o.deposit || 0, remaining = total - deposit;
-        const shipping = Number(o.shipping || 0);
-        const productSubtotal = total - shipping; 
+        const address = o.details.address || "";
+        
+        return `<div class="order-item" style="border-left: 8px solid ${accent}; background: ${bg};">
+                <div style="display:flex; justify-content:space-between; font-size:11px; font-weight:bold; color:${accent}">
+                    <span>${isCutter ? '✂️ CUTTER' : '🌸 FLOWER'} ${o.status ? '✅' : '⏳'}</span>
+                    <span style="color:gray">${o.date}</span>
+                </div>
+                <div style="margin:5px 0"><b>👤 ${o.name}</b> ${o.shipping > 0 ? `<small style="color:#ff6b6b">(ส่ง +${o.shipping})</small>` : ''}</div>
+                
+                ${address ? `<div style="font-size:11px; color:#777; background:#fff; padding:5px; border-radius:8px; margin-bottom:5px; border:1px solid #eee;">
+                    📍 ${address.substring(0, 30)}${address.length > 30 ? '...' : ''} 
+                    <button class="btn-copy-address" onclick="copyToClipboard('${address.replace(/'/g, "\\'")}')">ก๊อปที่อยู่</button>
+                </div>` : ''}
 
-        document.getElementById("receipt-title").innerText = isReceipt ? "METIST" : (o.type === 'เครื่องตัด' ? "🌸 METIST ✨" : "🌸 METIST ✨");
-        let body = isReceipt ? `ลูกค้า: คุณ ${o.name}<br>` : `👤 <b>ลูกค้า:</b> ${o.name}<br>`;
-        
-        if (o.type === 'เครื่องตัด') {
-            body += `รายการ: งานเครื่องตัด${o.details.hasSwitch ? ' (สวิตช์)' : ''} x${o.details.qty || 1} ชิ้น<br>`;
-        } else {
-            let fTxt = []; for (let t in o.details.flowers) { for (let c in o.details.flowers[t]) if (o.details.flowers[t][c] > 0) fTxt.push(`${c}${t==='กริตเตอร์'?'(กริต)':''} x${o.details.flowers[t][c]}`); }
-            let exTxt = Object.keys(o.details.extras).filter(ex => o.details.extras[ex] > 0);
-            body += isReceipt ? `สีดอกไม้: ${fTxt.join(", ") || "-"}<br>กระดาษ: ${o.details.paper || "-"}<br>โบว์: ${o.details.bow || "-"}<br>ตกแต่ง: ${exTxt.join(", ") || "-"}` : `🌹 <b>สีดอก:</b> ${fTxt.join(", ") || "-"}<br>📦 <b>กระดาษ:</b> ${o.details.paper || "-"}<br>🎀 <b>โบว์:</b> ${o.details.bow || "-"}<br>✨ <b>ของตกแต่ง:</b> ${exTxt.join(", ") || "-"}`;
-        }
+                <div style="font-weight:bold">ยอดทั้งหมด: ${total.toLocaleString()} ฿</div>
+                ${!o.paid && deposit > 0 ? `<div style="font-size:11px; color:#666;">มัดจำแล้ว: <span style="color:#51cf66; font-weight:bold;">${deposit.toLocaleString()} ฿</span></div><div style="font-size:11px; color:#ff6b6b; margin-bottom:5px;">คงเหลือ: <b>${remaining.toLocaleString()} ฿</b></div>` : ''}
+                
+                <div class="btn-group">
+                    <button class="status-btn" style="background:${o.status ? '#51cf66' : '#ff6b6b'}; flex:1" onclick="toggleStatus(${realIdx})">${o.status ? 'ทำแล้ว' : 'รอดำเนินการ'}</button>
+                    <button class="status-btn" style="background:${o.paid ? '#51cf66' : '#ff6b6b'}; flex:1" onclick="togglePaid(${realIdx})">${o.paid ? 'จ่ายครบแล้ว' : 'ยังไม่ครบ'}</button>
+                </div>
+                <div class="btn-group">
+                    <button class="status-btn" style="background:white; color:${accent}; border:1px solid ${accent}; flex:1" onclick="setDeposit(${realIdx})">มัดจำ</button>
+                    <button class="status-btn" style="background:white; color:${accent}; border:1px solid ${accent}; flex:1" onclick="openPopup(${realIdx}, 'order')">รายละเอียด</button>
+                    <button class="status-btn" style="background:white; color:${accent}; border:1px solid ${accent}; flex:1" onclick="openPopup(${realIdx}, 'receipt')">ใบเสร็จ</button>
+                </div>
+                <div class="btn-group">
+                    <button class="status-btn" style="background:white; color:${accent}; border:1px solid ${accent}; flex:1" onclick="editOrder(${realIdx})">แก้ไขออเดอร์</button>
+                    <button class="status-btn" style="background:#eee; color:#999; width:35px" onclick="deleteOrder(${realIdx})">🗑️</button>
+                </div>
+            </div>`;
+    }).join("");
+}
 
-        body += `<br>`;
-        if (shipping > 0) {
-            body += `<br>${isReceipt ? 'ราคาสินค้า:' : '💐 <b>ราคาสินค้า:</b>'} ${productSubtotal.toLocaleString()} ฿`;
-            body += `<br>${isReceipt ? 'ค่าจัดส่ง:' : '🚚 <b>ค่าจัดส่ง:</b>'} ${shipping.toLocaleString()} ฿`;
-        }
-        body += `<br><b style="font-size:1.1rem; color:var(--pink-dark)">ยอดรวมสุทธิ: ${total.toLocaleString()} ฿</b>`;
-        
-        if (deposit > 0) { 
-            body += `<br>${isReceipt ? 'มัดจำแล้ว:' : '<span style="color:#51cf66;">มัดจำแล้ว:</span>'} ${deposit.toLocaleString()} ฿`; 
-            if(!o.paid) body += `<br><b style="color:#ff6b6b;">คงเหลือ: ${remaining.toLocaleString()} ฿</b>`; 
-        }
-        
-        document.getElementById("rc-date").innerText = "วันที่: " + o.date;
-        document.getElementById("modal-body").innerHTML = body;
-        document.getElementById("receipt-extras").style.display = isReceipt ? "flex" : "none";
-        document.getElementById("receiptModal").style.display = "block";
+function openPopup(i, mode) {
+    const o = orders[i]; const isReceipt = mode === 'receipt';
+    const total = cleanPrice(o.total), deposit = o.deposit || 0, remaining = total - deposit;
+    const shipping = Number(o.shipping || 0);
+    const productSubtotal = total - shipping; 
+
+    document.getElementById("receipt-title").innerText = isReceipt ? "METIST" : "🌸 METIST ✨";
+    let body = isReceipt ? `ลูกค้า: คุณ ${o.name}<br>` : `👤 <b>ลูกค้า:</b> ${o.name}<br>`;
+    
+    // เพิ่มที่อยู่ในรายละเอียด
+    if(o.details.address) body += `📍 <b>ที่อยู่:</b> ${o.details.address}<br>`;
+
+    if (o.type === 'เครื่องตัด') {
+        body += `รายการ: งานเครื่องตัด${o.details.hasSwitch ? ' (สวิตช์)' : ''} x${o.details.qty || 1} ชิ้น<br>`;
+    } else {
+        let fTxt = []; for (let t in o.details.flowers) { for (let c in o.details.flowers[t]) if (o.details.flowers[t][c] > 0) fTxt.push(`${c}${t==='กริตเตอร์'?'(กริต)':''} x${o.details.flowers[t][c]}`); }
+        let exTxt = Object.keys(o.details.extras).filter(ex => o.details.extras[ex] > 0);
+        body += isReceipt ? `สีดอกไม้: ${fTxt.join(", ") || "-"}<br>กระดาษ: ${o.details.paper || "-"}<br>โบว์: ${o.details.bow || "-"}<br>ตกแต่ง: ${exTxt.join(", ") || "-"}` : `🌹 <b>สีดอก:</b> ${fTxt.join(", ") || "-"}<br>📦 <b>กระดาษ:</b> ${o.details.paper || "-"}<br>🎀 <b>โบว์:</b> ${o.details.bow || "-"}<br>✨ <b>ของตกแต่ง:</b> ${exTxt.join(", ") || "-"}`;
     }
 
-    async function shareReceipt() {
-        const receiptElement = document.querySelector(".receipt-border");
-        const container = document.createElement('div');
-        container.style.width = '375px';
-        container.style.height = '500px'; 
-        container.style.display = 'flex';
-        container.style.flexDirection = 'column';
-        container.style.alignItems = 'center';
-        container.style.justifyContent = 'center';
-        container.style.padding = '20px';
-        container.style.background = '#fdf2f7'; 
-        container.style.position = 'fixed';
-        container.style.top = '-9999px';
-
-        const clone = receiptElement.cloneNode(true);
-        clone.style.width = '100%';
-        clone.style.margin = '0';
-        clone.style.background = 'white';
-        container.appendChild(clone);
-        document.body.appendChild(container);
-
-        try {
-            const canvas = await html2canvas(container, { scale: 2 });
-            document.body.removeChild(container);
-            
-            canvas.toBlob(async (blob) => {
-                const file = new File([blob], 'METIST_Receipt.png', { type: 'image/png' });
-                if (navigator.share && navigator.canShare({ files: [file] })) {
-                    await navigator.share({ files: [file], title: 'ใบเสร็จ METIST' });
-                } else {
-                    const a = document.createElement('a');
-                    a.download = 'METIST_Receipt.png';
-                    a.href = canvas.toDataURL();
-                    a.click();
-                }
-            });
-        } catch (e) { alert("ล้มเหลว: " + e); }
+    body += `<br>`;
+    if (shipping > 0) {
+        body += `<br>${isReceipt ? 'ราคาสินค้า:' : '💐 <b>ราคาสินค้า:</b>'} ${productSubtotal.toLocaleString()} ฿`;
+        body += `<br>${isReceipt ? 'ค่าจัดส่ง:' : '🚚 <b>ค่าจัดส่ง:</b>'} ${shipping.toLocaleString()} ฿`;
     }
-
-    function renderSummary() {
-        const totalSales = orders.reduce((s, o) => s + cleanPrice(o.total), 0);
-        const cost = costs.reduce((s, c) => s + (Number(c.amount) || 0), 0);
-        const flowerOrders = orders.filter(o => o.type === 'ดอกไม้');
-        const fPaid = flowerOrders.reduce((s, o) => s + (o.paid ? cleanPrice(o.total) : (o.deposit || 0)), 0);
-        const fPending = flowerOrders.reduce((s, o) => s + (o.paid ? 0 : (cleanPrice(o.total) - (o.deposit || 0))), 0);
-        const cutterOrders = orders.filter(o => o.type === 'เครื่องตัด');
-        const cPaid = cutterOrders.reduce((s, o) => s + (o.paid ? cleanPrice(o.total) : (o.deposit || 0)), 0);
-        const cPending = cutterOrders.reduce((s, o) => s + (o.paid ? 0 : (cleanPrice(o.total) - (o.deposit || 0))), 0);
-
-        document.getElementById("stat-sale").innerText = totalSales.toLocaleString();
-        document.getElementById("stat-cost").innerText = cost.toLocaleString();
-        document.getElementById("stat-profit").innerText = (totalSales - cost).toLocaleString();
-        document.getElementById("pay-flower-done").innerText = fPaid.toLocaleString();
-        document.getElementById("pay-flower-pending").innerText = fPending.toLocaleString();
-        document.getElementById("pay-cutter-done").innerText = cPaid.toLocaleString();
-        document.getElementById("pay-cutter-pending").innerText = cPending.toLocaleString();
-        document.getElementById("cost-history-body").innerHTML = [...costs].reverse().map((c, i) => `<tr><td>${c.date}</td><td>${c.desc}</td><td>${Number(c.amount).toLocaleString()}</td><td><button onclick="deleteCost(${costs.length-1-i})" style="border:none; color:red; background:none;">ลบ</button></td></tr>`).join("");
+    body += `<br><b style="font-size:1.1rem; color:var(--pink-dark)">ยอดรวมสุทธิ: ${total.toLocaleString()} ฿</b>`;
+    
+    if (!o.paid && deposit > 0) { 
+        body += `<br>${isReceipt ? 'มัดจำแล้ว:' : '<span style="color:#51cf66;">มัดจำแล้ว:</span>'} ${deposit.toLocaleString()} ฿`; 
+        body += `<br><b style="color:#ff6b6b;">คงเหลือ: ${remaining.toLocaleString()} ฿</b>`; 
     }
+    
+    document.getElementById("rc-date").innerText = "วันที่: " + o.date;
+    document.getElementById("modal-body").innerHTML = body;
+    document.getElementById("receipt-extras").style.display = isReceipt ? "flex" : "none";
+    document.getElementById("receiptModal").style.display = "block";
+}
 
-    function updatePendingNav() { const p = orders.filter(o => !o.status).length; document.getElementById("nav-pending").innerText = p > 0 ? `(${p})` : ""; }
-    function toggleStatus(i) { orders[i].status = !orders[i].status; updateStore(); }
-    function togglePaid(i) { orders[i].paid = !orders[i].paid; updateStore(); }
-    function deleteOrder(i) { if(confirm("ลบออเดอร์นี้?")) { orders.splice(i, 1); updateStore(); } }
-    function setDeposit(i) { let amt = prompt("ระบุจำนวนเงินมัดจำ:", orders[i].deposit || ""); if (amt !== null) { orders[i].deposit = Number(amt); updateStore(); } }
-    function updateStore() { localStorage.setItem("metist_orders", JSON.stringify(orders)); renderOrderList(); updatePendingNav(); }
-    function addCost() { const d = document.getElementById("cost-desc").value, a = document.getElementById("cost-amount").value; if(!a) return; costs.push({ desc: d||"ทั่วไป", amount: a, date: new Date().toLocaleDateString('th-TH') }); localStorage.setItem("metist_costs", JSON.stringify(costs)); renderSummary(); document.getElementById("cost-desc").value = ""; document.getElementById("cost-amount").value = ""; }
-    function deleteCost(i) { costs.splice(i,1); localStorage.setItem("metist_costs", JSON.stringify(costs)); renderSummary(); }
-    function closeModal() { document.getElementById("receiptModal").style.display = "none"; }
-    function exportData() { const blob = new Blob([JSON.stringify({ orders, costs })], { type: "application/json" }); const a = document.createElement("a"); a.href = URL.createObjectURL(blob); a.download = `METIST_Backup.json`; a.click(); }
-    function importData(e) { const reader = new FileReader(); reader.onload = (ev) => { const data = JSON.parse(ev.target.result); if (confirm("นำเข้าข้อมูล?")) { localStorage.setItem("metist_orders", JSON.stringify(data.orders)); localStorage.setItem("metist_costs", JSON.stringify(data.costs)); location.reload(); } }; reader.readAsText(e.target.files[0]); }
+async function shareReceipt() {
+    const receiptElement = document.querySelector(".receipt-border");
+    const container = document.createElement('div');
+    container.style.width = '375px';
+    container.style.height = '600px'; 
+    container.style.display = 'flex';
+    container.style.flexDirection = 'column';
+    container.style.alignItems = 'center';
+    container.style.justifyContent = 'center';
+    container.style.padding = '20px';
+    container.style.background = '#fdf2f7'; 
+    container.style.position = 'fixed';
+    container.style.top = '-9999px';
 
-    function showTaskSummary() {
-        const pendingOrders = orders.filter(o => !o.status);
-        if (pendingOrders.length === 0) { alert("เย้! ไม่มีออเดอร์ค้างทำในขณะนี้ 🌸"); return; }
+    const clone = receiptElement.cloneNode(true);
+    clone.style.width = '100%';
+    clone.style.margin = '0';
+    clone.style.background = 'white';
+    container.appendChild(clone);
+    document.body.appendChild(container);
+
+    try {
+        const canvas = await html2canvas(container, { scale: 2 });
+        document.body.removeChild(container);
         
-        let flowerSummary = {}; 
-        let cutterNormalQty = 0; 
-        let cutterSwitchQty = 0; 
-
-        pendingOrders.forEach(o => {
-            let q = o.details.qty || 1; 
-            if (o.type === 'เครื่องตัด') {
-                if (o.details.hasSwitch) {
-                    cutterSwitchQty += q;
-                } else {
-                    cutterNormalQty += q;
-                }
+        canvas.toBlob(async (blob) => {
+            const file = new File([blob], 'METIST_Receipt.png', { type: 'image/png' });
+            if (navigator.share && navigator.canShare({ files: [file] })) {
+                await navigator.share({ files: [file], title: 'ใบเสร็จ METIST' });
             } else {
-                const flowers = o.details.flowers;
-                for (let type in flowers) {
-                    for (let color in flowers[type]) {
-                        if (flowers[type][color] > 0) {
-                            const key = `${color} (${type})`;
-                            flowerSummary[key] = (flowerSummary[key] || 0) + (flowers[type][color]);
-                        }
+                const a = document.createElement('a');
+                a.download = 'METIST_Receipt.png';
+                a.href = canvas.toDataURL();
+                a.click();
+            }
+        });
+    } catch (e) { alert("ล้มเหลว: " + e); }
+}
+
+function renderSummary() {
+    const totalSales = orders.reduce((s, o) => s + cleanPrice(o.total), 0);
+    const cost = costs.reduce((s, c) => s + (Number(c.amount) || 0), 0);
+    const flowerOrders = orders.filter(o => o.type === 'ดอกไม้');
+    const fPaid = flowerOrders.reduce((s, o) => s + (o.paid ? cleanPrice(o.total) : (o.deposit || 0)), 0);
+    const fPending = flowerOrders.reduce((s, o) => s + (o.paid ? 0 : (cleanPrice(o.total) - (o.deposit || 0))), 0);
+    const cutterOrders = orders.filter(o => o.type === 'เครื่องตัด');
+    const cPaid = cutterOrders.reduce((s, o) => s + (o.paid ? cleanPrice(o.total) : (o.deposit || 0)), 0);
+    const cPending = cutterOrders.reduce((s, o) => s + (o.paid ? 0 : (cleanPrice(o.total) - (o.deposit || 0))), 0);
+
+    document.getElementById("stat-sale").innerText = totalSales.toLocaleString();
+    document.getElementById("stat-cost").innerText = cost.toLocaleString();
+    document.getElementById("stat-profit").innerText = (totalSales - cost).toLocaleString();
+    document.getElementById("pay-flower-done").innerText = fPaid.toLocaleString();
+    document.getElementById("pay-flower-pending").innerText = fPending.toLocaleString();
+    document.getElementById("pay-cutter-done").innerText = cPaid.toLocaleString();
+    document.getElementById("pay-cutter-pending").innerText = cPending.toLocaleString();
+    document.getElementById("cost-history-body").innerHTML = [...costs].reverse().map((c, i) => `<tr><td>${c.date}</td><td>${c.desc}</td><td>${Number(c.amount).toLocaleString()}</td><td><button onclick="deleteCost(${costs.length-1-i})" style="border:none; color:red; background:none;">ลบ</button></td></tr>`).join("");
+}
+
+function updatePendingNav() { const p = orders.filter(o => !o.status).length; document.getElementById("nav-pending").innerText = p > 0 ? `(${p})` : ""; }
+function toggleStatus(i) { orders[i].status = !orders[i].status; updateStore(); }
+function togglePaid(i) { orders[i].paid = !orders[i].paid; updateStore(); }
+function deleteOrder(i) { if(confirm("ลบออเดอร์นี้?")) { orders.splice(i, 1); updateStore(); } }
+function setDeposit(i) { let amt = prompt("ระบุจำนวนเงินมัดจำ:", orders[i].deposit || ""); if (amt !== null) { orders[i].deposit = Number(amt); updateStore(); } }
+function updateStore() { localStorage.setItem("metist_orders", JSON.stringify(orders)); renderOrderList(); updatePendingNav(); }
+function addCost() { const d = document.getElementById("cost-desc").value, a = document.getElementById("cost-amount").value; if(!a) return; costs.push({ desc: d||"ทั่วไป", amount: a, date: new Date().toLocaleDateString('th-TH') }); localStorage.setItem("metist_costs", JSON.stringify(costs)); renderSummary(); document.getElementById("cost-desc").value = ""; document.getElementById("cost-amount").value = ""; }
+function deleteCost(i) { costs.splice(i,1); localStorage.setItem("metist_costs", JSON.stringify(costs)); renderSummary(); }
+function closeModal() { document.getElementById("receiptModal").style.display = "none"; }
+function exportData() { const blob = new Blob([JSON.stringify({ orders, costs })], { type: "application/json" }); const a = document.createElement("a"); a.href = URL.createObjectURL(blob); a.download = `METIST_Backup.json`; a.click(); }
+function importData(e) { const reader = new FileReader(); reader.onload = (ev) => { const data = JSON.parse(ev.target.result); if (confirm("นำเข้าข้อมูล?")) { localStorage.setItem("metist_orders", JSON.stringify(data.orders)); localStorage.setItem("metist_costs", JSON.stringify(data.costs)); location.reload(); } }; reader.readAsText(e.target.files[0]); }
+function clearAllData() {
+    if (confirm("⚠️ คำเตือน: ข้อมูล 'ออเดอร์' และ 'ค่าใช้จ่าย' ทั้งหมดจะถูกลบ!")) {
+        if (confirm("คุณแน่ใจจริงๆ นะ? ข้อมูลจะหายถาวร")) {
+            localStorage.removeItem("metist_orders");
+            localStorage.removeItem("metist_costs");
+            alert("ล้างระบบเรียบร้อยแล้ว ✨");
+            location.reload();
+        }
+    }
+}
+
+function showTaskSummary() {
+    const pendingOrders = orders.filter(o => !o.status);
+    if (pendingOrders.length === 0) { alert("เย้! ไม่มีออเดอร์ค้างทำในขณะนี้ 🌸"); return; }
+    
+    let flowerSummary = {}; 
+    let cutterNormalQty = 0; 
+    let cutterSwitchQty = 0; 
+
+    pendingOrders.forEach(o => {
+        let q = o.details.qty || 1; 
+        if (o.type === 'เครื่องตัด') {
+            if (o.details.hasSwitch) { cutterSwitchQty += q; } else { cutterNormalQty += q; }
+        } else {
+            const flowers = o.details.flowers;
+            for (let type in flowers) {
+                for (let color in flowers[type]) {
+                    if (flowers[type][color] > 0) {
+                        const key = `${color} (${type})`;
+                        flowerSummary[key] = (flowerSummary[key] || 0) + (flowers[type][color]);
                     }
                 }
             }
-        });
-
-        let summaryHtml = `<div style="text-align:left; font-size:14px;"><p><b>📦 งานค้างทั้งหมด: ${pendingOrders.length} รายการ</b></p><hr>`;
-        if (cutterNormalQty > 0) summaryHtml += `<p style="color:var(--cutter-color); font-size:16px; margin-bottom:5px;"><b>✂️ เครื่องตัด (ปกติ): ${cutterNormalQty} ชิ้น</b></p>`;
-        if (cutterSwitchQty > 0) summaryHtml += `<p style="color:var(--purple-dark); font-size:16px; margin-top:0;"><b>🔘 เครื่องตัด (สวิตช์): ${cutterSwitchQty} ชิ้น</b></p>`;
-        
-        if (Object.keys(flowerSummary).length > 0) {
-            summaryHtml += `<p><b>🌹 ดอกไม้ที่ต้องเตรียม:</b></p><ul>`;
-            for (let f in flowerSummary) summaryHtml += `<li>${f}: ${flowerSummary[f]} ดอก</li>`;
-            summaryHtml += `</ul>`;
         }
-        summaryHtml += `</div>`;
-        document.getElementById("receipt-title").innerText = "📋 สรุปสิ่งที่ต้องเตรียม";
-        document.getElementById("rc-date").innerText = "ข้อมูล ณ วันที่: " + new Date().toLocaleDateString('th-TH');
-        document.getElementById("modal-body").innerHTML = summaryHtml;
-        document.getElementById("receipt-extras").style.display = "none";
-        document.getElementById("receiptModal").style.display = "block";
+    });
+
+    let summaryHtml = `<div style="text-align:left; font-size:14px;"><p><b>📦 งานค้างทั้งหมด: ${pendingOrders.length} รายการ</b></p><hr>`;
+    if (cutterNormalQty > 0) summaryHtml += `<p style="color:var(--cutter-color); font-size:16px; margin-bottom:5px;"><b>✂️ เครื่องตัด (ปกติ): ${cutterNormalQty} ชิ้น</b></p>`;
+    if (cutterSwitchQty > 0) summaryHtml += `<p style="color:var(--purple-dark); font-size:16px; margin-top:0;"><b>🔘 เครื่องตัด (สวิตช์): ${cutterSwitchQty} ชิ้น</b></p>`;
+    
+    if (Object.keys(flowerSummary).length > 0) {
+        summaryHtml += `<p><b>🌹 ดอกไม้ที่ต้องเตรียม:</b></p><ul>`;
+        for (let f in flowerSummary) summaryHtml += `<li>${f}: ${flowerSummary[f]} ดอก</li>`;
+        summaryHtml += `</ul>`;
     }
+    summaryHtml += `</div>`;
+    document.getElementById("receipt-title").innerText = "📋 สรุปสิ่งที่ต้องเตรียม";
+    document.getElementById("rc-date").innerText = "ข้อมูล ณ วันที่: " + new Date().toLocaleDateString('th-TH');
+    document.getElementById("modal-body").innerHTML = summaryHtml;
+    document.getElementById("receipt-extras").style.display = "none";
+    document.getElementById("receiptModal").style.display = "block";
+}
 
-    document.getElementById("paper-grid").innerHTML = ["ดำ", "ขาว", "ชมพู", "แดง"].map(c => `<button class="square-btn" style="background:${colors[c]}; color:${c==='ขาว'?'#555':'#fff'}" onclick="selectedPapers.push('${c}'); document.getElementById('paperChoice').innerText='เลือก: '+selectedPapers.join(',')">${c}</button>`).join("");
-    document.getElementById("bow-grid").innerHTML = ["แดง", "ขาว", "ชมพู", "น้ำเงิน", "ม่วง", "ชมพูแก้ว", "แดงแก้ว"].map(c => `<button class="square-btn" style="background:${colors[c]}; color:${c==='ขาว'?'#555':'#fff'}" onclick="selectedBows.push('${c}'); document.getElementById('bowChoice').innerText='เลือก: '+selectedBows.join(',')">${c}</button>`).join("");
-    document.getElementById("extra-grid").innerHTML = Object.keys(extraPrice).map(e => `<button class="square-btn" style="background:#f2b5d4; color:#5a3d45;" onclick="selectedExtras['${e}']=(selectedExtras['${e}']||0)+1; calcTotal(); renderExtraChoice();">${e}+${extraPrice[e]}</button>`).join("");
+// ฟังก์ชันสำหรับดึงออเดอร์ออนไลน์ ( Admin )
+async function fetchCloudOrders() {
+    const listDiv = document.getElementById("cloud-list");
+    listDiv.innerHTML = "<div style='text-align:center; padding:20px;'>กำลังโหลด...</div>";
+    try {
+        const { data, error } = await _supabase.from('orders').select('*').eq('status', false);
+        if (error) throw error;
+        
+        const navCloud = document.getElementById("nav-cloud");
+        if(navCloud) navCloud.innerText = data.length > 0 ? `(${data.length})` : "";
+        
+        if (data.length === 0) { 
+            listDiv.innerHTML = "<div style='text-align:center; padding:20px; color:gray;'>ไม่มีออเดอร์ใหม่จากลูกค้าครับ ☁️</div>"; 
+            return; 
+        }
 
-    renderFlowers();
-    updatePendingNav();
+        listDiv.innerHTML = data.map(o => {
+            const addr = o.details?.address || "";
+            const slipUrl = o.slip_url || o.image || o.slip || 'slip.png';
+            return `
+            <div class="card" style="border-left: 8px solid var(--purple-dark); margin-bottom: 10px;">
+                <div style="display:flex; justify-content:space-between; font-size:11px; font-weight:bold; color:var(--purple-dark);">
+                    <span>☁️ ออเดอร์ออนไลน์จากลูกค้า</span>
+                    <button class="btn-view-slip" onclick="window.open('${slipUrl}', '_blank')">🔍 ดูสลิป</button>
+                </div>
+                <div style="margin:5px 0"><b>👤 ${o.name}</b></div>
+                
+                ${addr ? `<div style="font-size:11px; color:#666; background:#f9f9f9; padding:8px; border-radius:10px; margin-bottom:10px; border:1px solid #ddd;">
+                    📍 ${addr} <br>
+                    <button class="btn-copy-address" style="margin-top:5px;" onclick="copyToClipboard('${addr.replace(/'/g, "\\'")}')">📋 คัดลอกที่อยู่</button>
+                </div>` : ''}
+
+                <div style="font-weight:bold; margin-bottom:10px;">ยอดที่ลูกค้าสั่ง: ${Number(o.total).toLocaleString()} ฿</div>
+                <button onclick='approveCloudOrder("${o.id}", ${JSON.stringify(o).replace(/'/g, "\\'")})' style="width:100%; background:var(--purple-dark); color:white; border:none; padding:10px; border-radius:12px; font-weight:bold; cursor:pointer;">
+                    📥 รับออเดอร์เข้าเครื่อง
+                </button>
+            </div>
+        `}).join("");
+    } catch (err) {
+        listDiv.innerHTML = `<div style="color:red; text-align:center; padding:20px;">โหลดไม่สำเร็จ ลองรีเฟรชใหม่นะครับ</div>`;
+    }
+}
+
+async function approveCloudOrder(dbId, cloudData) {
+    if (!confirm(`ยืนยันการรับออเดอร์ของคุณ ${cloudData.name} เข้าสู่ระบบ?`)) return;
+    
+    const newOrder = {
+        id: Date.now(),
+        name: cloudData.name + " (ออนไลน์)",
+        type: cloudData.details?.isCutter ? 'เครื่องตัด' : 'ดอกไม้',
+        total: cloudData.total,
+        shipping: 0,
+        details: cloudData.details || {},
+        date: new Date().toLocaleDateString('th-TH'),
+        status: false,
+        paid: true,
+        deposit: cloudData.total
+    };
+    
+    orders.push(newOrder);
+    updateStore(); 
+    
+    // อัปเดตใน Cloud ว่าดึงมาแล้ว
+    await _supabase.from('orders').update({ status: true }).eq('id', dbId);
+    
+    alert("ดึงออเดอร์สำเร็จ!");
+    fetchCloudOrders();
+}
+
+// เริ่มต้น Grid ต่างๆ
+document.getElementById("paper-grid").innerHTML = ["ดำ", "ขาว", "ชมพู", "แดง"].map(c => `<button class="square-btn" style="background:${colors[c]}; color:${c==='ขาว'?'#555':'#fff'}" onclick="selectedPapers.push('${c}'); document.getElementById('paperChoice').innerText='เลือก: '+selectedPapers.join(',')">${c}</button>`).join("");
+document.getElementById("bow-grid").innerHTML = ["แดง", "ขาว", "ชมพู", "น้ำเงิน", "ม่วง", "ชมพูแก้ว", "แดงแก้ว"].map(c => `<button class="square-btn" style="background:${colors[c]}; color:${c==='ขาว'?'#555':'#fff'}" onclick="selectedBows.push('${c}'); document.getElementById('bowChoice').innerText='เลือก: '+selectedBows.join(',')">${c}</button>`).join("");
+document.getElementById("extra-grid").innerHTML = Object.keys(extraPrice).map(e => `<button class="square-btn" style="background:#f2b5d4; color:#5a3d45;" onclick="selectedExtras['${e}']=(selectedExtras['${e}']||0)+1; calcTotal(); renderExtraChoice();">${e}+${extraPrice[e]}</button>`).join("");
+
+renderFlowers();
+updatePendingNav();
 </script>
 </body>
 </html>
