@@ -24,6 +24,7 @@
             --bg: #fdf2f7;
             --text: #5a3d45;
             --cutter-color: #26a69a; 
+            --claim-accent: #ff6b6b; /* สีสำหรับงานเคลม */
         }
 
         body { font-family: 'Segoe UI', Tahoma, sans-serif; background: var(--bg); margin: 0; padding: 15px; color: var(--text); }
@@ -87,7 +88,6 @@
         
         #receipt-extras { display: flex; flex-direction: column; align-items: center; justify-content: center; width: 100%; margin-top: 5px; }
 
-        /* สไตล์ปุ่มคัดลอก และปุ่มสลิปที่เพิ่มใหม่ */
         .btn-copy-address { background: #f0f0f0; color: #555; padding: 4px 8px; border-radius: 8px; font-size: 10px; border: 1px solid #ddd; cursor: pointer; font-weight: bold; margin-left: 5px; }
         .btn-view-slip { background: #fff0f3; color: var(--pink-dark); padding: 4px 8px; border-radius: 8px; font-size: 10px; border: 1px solid var(--pink); cursor: pointer; font-weight: bold; }
     </style>
@@ -254,12 +254,10 @@
 </div>
 
 <script>
-// --- ส่วนการตั้งค่า SUPABASE ---
 const SUPABASE_URL = 'https://hcxegxzyaeckcfybqmuw.supabase.co';
 const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImhjeGVneHp5YWVja2NmeWJxbXV3Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzI3Njk2NDAsImV4cCI6MjA4ODM0NTY0MH0.V24YgTlKrFL9LpzUFI8O9beRA9olxW-LYvsaMaVuO4w';
 const _supabase = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
 
-// ข้อมูลหลัก
 let orders = JSON.parse(localStorage.getItem("metist_orders") || "[]");
 let costs = JSON.parse(localStorage.getItem("metist_costs") || "[]");
 let orderBeingEdited = null;
@@ -275,7 +273,6 @@ let selectedExtras = {};
 
 const cleanPrice = (val) => typeof val === 'number' ? val : parseFloat(String(val).replace(/[^0-9.]/g, '')) || 0;
 
-// ฟังก์ชันคัดลอกที่อยู่
 function copyToClipboard(text) {
     if(!text) { alert("ไม่มีข้อมูลที่อยู่ให้คัดลอกครับ"); return; }
     navigator.clipboard.writeText(text).then(() => {
@@ -345,7 +342,7 @@ function calcTotal() {
 
 function saveOrder(productType) {
     let name = document.getElementById("customer").value;
-    let address = document.getElementById("admin-address").value; // ที่อยู่
+    let address = document.getElementById("admin-address").value;
     if(!name) { alert("กรุณาใส่ชื่อลูกค้า"); return; }
     
     let shipping = Number(document.getElementById("ship-flower").value || 0);
@@ -443,14 +440,15 @@ function renderOrderList() {
     listDiv.innerHTML = filtered.map((o) => {
         const realIdx = orders.findIndex(orig => orig.id === o.id);
         const isCutter = o.type === 'เครื่องตัด';
-        const accent = isCutter ? 'var(--cutter-color)' : 'var(--pink-dark)';
-        const bg = isCutter ? '#f0f9f8' : '#fff5f8';
+        const isClaim = o.details?.case === 'CLAIM' || o.type === 'เคลม';
+        const accent = isClaim ? 'var(--claim-accent)' : isCutter ? 'var(--cutter-color)' : 'var(--pink-dark)';
+        const bg = isClaim ? '#fff5f5' : isCutter ? '#f0f9f8' : '#fff5f8';
         const total = cleanPrice(o.total), deposit = o.deposit || 0, remaining = total - deposit;
         const address = o.details.address || "";
         
         return `<div class="order-item" style="border-left: 8px solid ${accent}; background: ${bg};">
                 <div style="display:flex; justify-content:space-between; font-size:11px; font-weight:bold; color:${accent}">
-                    <span>${isCutter ? '✂️ CUTTER' : '🌸 FLOWER'} ${o.status ? '✅' : '⏳'}</span>
+                    <span>${isClaim ? '🛠️ CLAIM' : isCutter ? '✂️ CUTTER' : '🌸 FLOWER'} ${o.status ? '✅' : '⏳'}</span>
                     <span style="color:gray">${o.date}</span>
                 </div>
                 <div style="margin:5px 0"><b>👤 ${o.name}</b> ${o.shipping > 0 ? `<small style="color:#ff6b6b">(ส่ง +${o.shipping})</small>` : ''}</div>
@@ -489,14 +487,20 @@ function openPopup(i, mode) {
     document.getElementById("receipt-title").innerText = isReceipt ? "METIST" : "🌸 METIST ✨";
     let body = isReceipt ? `ลูกค้า: คุณ ${o.name}<br>` : `👤 <b>ลูกค้า:</b> ${o.name}<br>`;
     
-    // เพิ่มที่อยู่ในรายละเอียด
     if(o.details.address) body += `📍 <b>ที่อยู่:</b> ${o.details.address}<br>`;
 
-    if (o.type === 'เครื่องตัด') {
+    if (o.details.case === 'CLAIM') {
+        body += `<div style="background:#fff0f0; padding:10px; border-radius:10px; margin:10px 0; border:1px solid #ffcccc; font-size:12px;">`;
+        body += `<b style="color:red;">🛠️ ข้อมูลการเคลม</b><br>`;
+        body += `<b>สินค้าที่เคลม:</b> ${(o.details.items || []).join(", ")}<br>`;
+        body += `<b>ปัญหาที่เจอ:</b> ${o.details.reason || "-"}<br>`;
+        body += `<b>วิธีส่งคืน:</b> ${o.details.method || "-"} (${o.details.courier || "-"})<br>`;
+        body += `</div>`;
+    } else if (o.type === 'เครื่องตัด') {
         body += `รายการ: งานเครื่องตัด${o.details.hasSwitch ? ' (สวิตช์)' : ''} x${o.details.qty || 1} ชิ้น<br>`;
     } else {
         let fTxt = []; for (let t in o.details.flowers) { for (let c in o.details.flowers[t]) if (o.details.flowers[t][c] > 0) fTxt.push(`${c}${t==='กริตเตอร์'?'(กริต)':''} x${o.details.flowers[t][c]}`); }
-        let exTxt = Object.keys(o.details.extras).filter(ex => o.details.extras[ex] > 0);
+        let exTxt = Object.keys(o.details.extras || {}).filter(ex => o.details.extras[ex] > 0);
         body += isReceipt ? `สีดอกไม้: ${fTxt.join(", ") || "-"}<br>กระดาษ: ${o.details.paper || "-"}<br>โบว์: ${o.details.bow || "-"}<br>ตกแต่ง: ${exTxt.join(", ") || "-"}` : `🌹 <b>สีดอก:</b> ${fTxt.join(", ") || "-"}<br>📦 <b>กระดาษ:</b> ${o.details.paper || "-"}<br>🎀 <b>โบว์:</b> ${o.details.bow || "-"}<br>✨ <b>ของตกแต่ง:</b> ${exTxt.join(", ") || "-"}`;
     }
 
@@ -611,7 +615,7 @@ function showTaskSummary() {
         let q = o.details.qty || 1; 
         if (o.type === 'เครื่องตัด') {
             if (o.details.hasSwitch) { cutterSwitchQty += q; } else { cutterNormalQty += q; }
-        } else {
+        } else if (o.type === 'ดอกไม้') {
             const flowers = o.details.flowers;
             for (let type in flowers) {
                 for (let color in flowers[type]) {
@@ -641,7 +645,6 @@ function showTaskSummary() {
     document.getElementById("receiptModal").style.display = "block";
 }
 
-// ฟังก์ชันสำหรับดึงออเดอร์ออนไลน์ ( Admin )
 async function fetchCloudOrders() {
     const listDiv = document.getElementById("cloud-list");
     listDiv.innerHTML = "<div style='text-align:center; padding:20px;'>กำลังโหลด...</div>";
@@ -658,23 +661,24 @@ async function fetchCloudOrders() {
         }
 
         listDiv.innerHTML = data.map(o => {
+            const isClaim = o.details?.case === 'CLAIM';
             const addr = o.details?.address || "";
-            const slipUrl = o.slip_url || o.image || o.slip || 'slip.png';
+            const slipUrl = o.slip_url || 'slip.png';
+            const accent = isClaim ? 'var(--claim-accent)' : 'var(--purple-dark)';
+            
             return `
-            <div class="card" style="border-left: 8px solid var(--purple-dark); margin-bottom: 10px;">
-                <div style="display:flex; justify-content:space-between; font-size:11px; font-weight:bold; color:var(--purple-dark);">
-                    <span>☁️ ออเดอร์ออนไลน์จากลูกค้า</span>
+            <div class="card" style="border-left: 8px solid ${accent}; margin-bottom: 10px;">
+                <div style="display:flex; justify-content:space-between; font-size:11px; font-weight:bold; color:${accent}">
+                    <span>${isClaim ? '🛠️ งานเคลม' : '☁️ ออนไลน์'}</span>
                     <button class="btn-view-slip" onclick="window.open('${slipUrl}', '_blank')">🔍 ดูสลิป</button>
                 </div>
                 <div style="margin:5px 0"><b>👤 ${o.name}</b></div>
-                
+                ${isClaim ? `<div style="font-size:11px; color:red; margin-bottom:5px;">⚠️ ปัญหา: ${o.details.reason}</div>` : ''}
                 ${addr ? `<div style="font-size:11px; color:#666; background:#f9f9f9; padding:8px; border-radius:10px; margin-bottom:10px; border:1px solid #ddd;">
                     📍 ${addr} <br>
                     <button class="btn-copy-address" style="margin-top:5px;" onclick="copyToClipboard('${addr.replace(/'/g, "\\'")}')">📋 คัดลอกที่อยู่</button>
                 </div>` : ''}
-
-                <div style="font-weight:bold; margin-bottom:10px;">ยอดที่ลูกค้าสั่ง: ${Number(o.total).toLocaleString()} ฿</div>
-                <button onclick='approveCloudOrder("${o.id}", ${JSON.stringify(o).replace(/'/g, "\\'")})' style="width:100%; background:var(--purple-dark); color:white; border:none; padding:10px; border-radius:12px; font-weight:bold; cursor:pointer;">
+                <button onclick='approveCloudOrder("${o.id}", ${JSON.stringify(o).replace(/'/g, "\\'")})' style="width:100%; background:${accent}; color:white; border:none; padding:10px; border-radius:12px; font-weight:bold; cursor:pointer;">
                     📥 รับออเดอร์เข้าเครื่อง
                 </button>
             </div>
@@ -686,11 +690,11 @@ async function fetchCloudOrders() {
 
 async function approveCloudOrder(dbId, cloudData) {
     if (!confirm(`ยืนยันการรับออเดอร์ของคุณ ${cloudData.name} เข้าสู่ระบบ?`)) return;
-    
+    const isClaim = cloudData.details?.case === 'CLAIM';
     const newOrder = {
         id: Date.now(),
-        name: cloudData.name + " (ออนไลน์)",
-        type: cloudData.details?.isCutter ? 'เครื่องตัด' : 'ดอกไม้',
+        name: cloudData.name + (isClaim ? " (เคลม)" : " (ออนไลน์)"),
+        type: isClaim ? 'เคลม' : (cloudData.details?.isCutter ? 'เครื่องตัด' : 'ดอกไม้'),
         total: cloudData.total,
         shipping: 0,
         details: cloudData.details || {},
@@ -699,18 +703,13 @@ async function approveCloudOrder(dbId, cloudData) {
         paid: true,
         deposit: cloudData.total
     };
-    
     orders.push(newOrder);
     updateStore(); 
-    
-    // อัปเดตใน Cloud ว่าดึงมาแล้ว
     await _supabase.from('orders').update({ status: true }).eq('id', dbId);
-    
     alert("ดึงออเดอร์สำเร็จ!");
     fetchCloudOrders();
 }
 
-// เริ่มต้น Grid ต่างๆ
 document.getElementById("paper-grid").innerHTML = ["ดำ", "ขาว", "ชมพู", "แดง"].map(c => `<button class="square-btn" style="background:${colors[c]}; color:${c==='ขาว'?'#555':'#fff'}" onclick="selectedPapers.push('${c}'); document.getElementById('paperChoice').innerText='เลือก: '+selectedPapers.join(',')">${c}</button>`).join("");
 document.getElementById("bow-grid").innerHTML = ["แดง", "ขาว", "ชมพู", "น้ำเงิน", "ม่วง", "ชมพูแก้ว", "แดงแก้ว"].map(c => `<button class="square-btn" style="background:${colors[c]}; color:${c==='ขาว'?'#555':'#fff'}" onclick="selectedBows.push('${c}'); document.getElementById('bowChoice').innerText='เลือก: '+selectedBows.join(',')">${c}</button>`).join("");
 document.getElementById("extra-grid").innerHTML = Object.keys(extraPrice).map(e => `<button class="square-btn" style="background:#f2b5d4; color:#5a3d45;" onclick="selectedExtras['${e}']=(selectedExtras['${e}']||0)+1; calcTotal(); renderExtraChoice();">${e}+${extraPrice[e]}</button>`).join("");
