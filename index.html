@@ -24,7 +24,7 @@
             --bg: #fdf2f7;
             --text: #5a3d45;
             --cutter-color: #26a69a; 
-            --claim-accent: #ff6b6b; /* สีสำหรับงานเคลม */
+            --claim-accent: #ff6b6b;
         }
 
         body { font-family: 'Segoe UI', Tahoma, sans-serif; background: var(--bg); margin: 0; padding: 15px; color: var(--text); }
@@ -348,32 +348,45 @@ function saveOrder(productType) {
     let shipping = Number(document.getElementById("ship-flower").value || 0);
     let basePrice = document.getElementById("basePrice").value;
     let total = calcTotal();
-    let qty = 1; 
-    let hasSwitch = false;
+    
+    // ตั้งค่า Default สำหรับเครื่องตัด
+    let cutterData = { normal: 0, withSwitch: 0 };
 
     if (productType === 'เครื่องตัด' && orderBeingEdited === null) {
-        hasSwitch = confirm("ต้องการติด 'สวิตช์' ด้วยหรือไม่?");
-        let qtyInput = prompt(`ระบุจำนวนเครื่องตัด${hasSwitch ? '' : ''}ที่ต้องการ`, "1");
-        if (qtyInput === null) return; 
-        qty = parseInt(qtyInput) || 1;
-        if (qty > 10) qty = 10;
-        if (qty < 1) qty = 1;
+        let nQty = prompt("จำนวนเครื่องตัด (ปกติ) ที่ต้องการ", "0");
+        let sQty = prompt("จำนวนเครื่องตัด (ติดสวิตช์) ที่ต้องการ", "0");
+        cutterData.normal = parseInt(nQty) || 0;
+        cutterData.withSwitch = parseInt(sQty) || 0;
+        
+        if (cutterData.normal === 0 && cutterData.withSwitch === 0) return;
     }
 
     let details = (productType === 'เครื่องตัด') 
-        ? { isCutter: true, basePrice, qty: qty, hasSwitch: hasSwitch, address: address } 
-        : { flowers: JSON.parse(JSON.stringify(currentFlowerData)), paper: selectedPapers.join(", "), bow: selectedBows.join(", "), extras: {...selectedExtras}, basePrice: basePrice, qty: 1, address: address };
+        ? { 
+            isCutter: true, 
+            basePrice, 
+            qty: (cutterData.normal + cutterData.withSwitch), 
+            cutterDetails: cutterData,
+            address: address 
+          } 
+        : { 
+            flowers: JSON.parse(JSON.stringify(currentFlowerData)), 
+            paper: selectedPapers.join(", "), 
+            bow: selectedBows.join(", "), 
+            extras: {...selectedExtras}, 
+            basePrice: basePrice, 
+            qty: 1, 
+            address: address 
+          };
 
     if (orderBeingEdited !== null) {
-        let oldQty = orders[orderBeingEdited].details.qty || 1;
-        let oldSwitch = orders[orderBeingEdited].details.hasSwitch || false;
-        orders[orderBeingEdited] = { ...orders[orderBeingEdited], name, total, shipping, details: {...details, qty: oldQty, hasSwitch: oldSwitch}, type: productType };
+        orders[orderBeingEdited] = { ...orders[orderBeingEdited], name, total, shipping, details: {...details}, type: productType };
         orderBeingEdited = null;
     } else {
-        let displayName = name + (hasSwitch ? " (สวิตช์)" : "") + (qty > 1 ? ` (${qty} ชิ้น)` : "");
+        let label = productType === 'เครื่องตัด' ? ` (✂️ ${cutterData.normal}+${cutterData.withSwitch})` : "";
         orders.push({ 
             id: Date.now(), 
-            name: displayName, 
+            name: name + label, 
             type: productType, 
             total, 
             shipping, 
@@ -399,7 +412,7 @@ function editOrder(index) {
     const o = orders[index];
     orderBeingEdited = index;
     switchPage('flower');
-    document.getElementById("customer").value = o.name;
+    document.getElementById("customer").value = o.name.split(' (')[0];
     document.getElementById("admin-address").value = o.details.address || "";
     document.getElementById("ship-flower").value = o.shipping;
     document.getElementById("basePrice").value = o.details.basePrice || "";
@@ -446,16 +459,23 @@ function renderOrderList() {
         const total = cleanPrice(o.total), deposit = o.deposit || 0, remaining = total - deposit;
         const address = o.details.address || "";
         
+        // สรุปจำนวนเครื่องตัดถ้ามี
+        let cutterLabel = "";
+        if(isCutter && o.details.cutterDetails) {
+            cutterLabel = `<div style="font-size:10px; color:${accent}">ปกติ: ${o.details.cutterDetails.normal} | สวิตช์: ${o.details.cutterDetails.withSwitch}</div>`;
+        }
+
         return `<div class="order-item" style="border-left: 8px solid ${accent}; background: ${bg};">
                 <div style="display:flex; justify-content:space-between; font-size:11px; font-weight:bold; color:${accent}">
                     <span>${isClaim ? '🛠️ CLAIM' : isCutter ? '✂️ CUTTER' : '🌸 FLOWER'} ${o.status ? '✅' : '⏳'}</span>
                     <span style="color:gray">${o.date}</span>
                 </div>
                 <div style="margin:5px 0"><b>👤 ${o.name}</b> ${o.shipping > 0 ? `<small style="color:#ff6b6b">(ส่ง +${o.shipping})</small>` : ''}</div>
-                
+                ${cutterLabel}
+
                 ${address ? `<div style="font-size:11px; color:#777; background:#fff; padding:5px; border-radius:8px; margin-bottom:5px; border:1px solid #eee;">
                     📍 ${address.substring(0, 30)}${address.length > 30 ? '...' : ''} 
-                    <button class="btn-copy-address" onclick="copyToClipboard('${address.replace(/'/g, "\\'")}')">ก๊อปที่อยู่</button>
+                    <button class="btn-copy-address" onclick="copyToClipboard('${address.replace(/'/g, "\\'").replace(/\n/g, " ")}')">ก๊อปที่อยู่</button>
                 </div>` : ''}
 
                 <div style="font-weight:bold">ยอดทั้งหมด: ${total.toLocaleString()} ฿</div>
@@ -497,7 +517,11 @@ function openPopup(i, mode) {
         body += `<b>วิธีส่งคืน:</b> ${o.details.method || "-"} (${o.details.courier || "-"})<br>`;
         body += `</div>`;
     } else if (o.type === 'เครื่องตัด') {
-        body += `รายการ: งานเครื่องตัด${o.details.hasSwitch ? ' (สวิตช์)' : ''} x${o.details.qty || 1} ชิ้น<br>`;
+        if(o.details.cutterDetails) {
+            body += `รายการ: เครื่องตัดปกติ x${o.details.cutterDetails.normal} | ติดสวิตช์ x${o.details.cutterDetails.withSwitch}<br>`;
+        } else {
+            body += `รายการ: งานเครื่องตัด${o.details.hasSwitch ? ' (สวิตช์)' : ''} x${o.details.qty || 1} ชิ้น<br>`;
+        }
     } else {
         let fTxt = []; for (let t in o.details.flowers) { for (let c in o.details.flowers[t]) if (o.details.flowers[t][c] > 0) fTxt.push(`${c}${t==='กริตเตอร์'?'(กริต)':''} x${o.details.flowers[t][c]}`); }
         let exTxt = Object.keys(o.details.extras || {}).filter(ex => o.details.extras[ex] > 0);
@@ -612,9 +636,14 @@ function showTaskSummary() {
     let cutterSwitchQty = 0; 
 
     pendingOrders.forEach(o => {
-        let q = o.details.qty || 1; 
         if (o.type === 'เครื่องตัด') {
-            if (o.details.hasSwitch) { cutterSwitchQty += q; } else { cutterNormalQty += q; }
+            if(o.details.cutterDetails) {
+                cutterNormalQty += o.details.cutterDetails.normal;
+                cutterSwitchQty += o.details.cutterDetails.withSwitch;
+            } else {
+                if (o.details.hasSwitch) { cutterSwitchQty += (o.details.qty || 1); } 
+                else { cutterNormalQty += (o.details.qty || 1); }
+            }
         } else if (o.type === 'ดอกไม้') {
             const flowers = o.details.flowers;
             for (let type in flowers) {
@@ -666,6 +695,12 @@ async function fetchCloudOrders() {
             const slipUrl = o.slip_url || 'slip.png';
             const accent = isClaim ? 'var(--claim-accent)' : 'var(--purple-dark)';
             
+            // ตรวจสอบเครื่องตัดจาก Cloud
+            let cutterSum = "";
+            if(o.details?.cutterDetails) {
+                cutterSum = `<div style="font-size:11px; color:#26a69a; margin-top:5px;">✂️ ปกติ: ${o.details.cutterDetails.normal} | สวิตช์: ${o.details.cutterDetails.withSwitch}</div>`;
+            }
+
             return `
             <div class="card" style="border-left: 8px solid ${accent}; margin-bottom: 10px;">
                 <div style="display:flex; justify-content:space-between; font-size:11px; font-weight:bold; color:${accent}">
@@ -673,10 +708,11 @@ async function fetchCloudOrders() {
                     <button class="btn-view-slip" onclick="window.open('${slipUrl}', '_blank')">🔍 ดูสลิป</button>
                 </div>
                 <div style="margin:5px 0"><b>👤 ${o.name}</b></div>
+                ${cutterSum}
                 ${isClaim ? `<div style="font-size:11px; color:red; margin-bottom:5px;">⚠️ ปัญหา: ${o.details.reason}</div>` : ''}
                 ${addr ? `<div style="font-size:11px; color:#666; background:#f9f9f9; padding:8px; border-radius:10px; margin-bottom:10px; border:1px solid #ddd;">
                     📍 ${addr} <br>
-                    <button class="btn-copy-address" style="margin-top:5px;" onclick="copyToClipboard('${addr.replace(/'/g, "\\'")}')">📋 คัดลอกที่อยู่</button>
+                    <button class="btn-copy-address" style="margin-top:5px;" onclick="copyToClipboard('${addr.replace(/'/g, "\\'").replace(/\n/g, " ")}')">📋 คัดลอกที่อยู่</button>
                 </div>` : ''}
                 <button onclick='approveCloudOrder("${o.id}", ${JSON.stringify(o).replace(/'/g, "\\'")})' style="width:100%; background:${accent}; color:white; border:none; padding:10px; border-radius:12px; font-weight:bold; cursor:pointer;">
                     📥 รับออเดอร์เข้าเครื่อง
@@ -691,10 +727,12 @@ async function fetchCloudOrders() {
 async function approveCloudOrder(dbId, cloudData) {
     if (!confirm(`ยืนยันการรับออเดอร์ของคุณ ${cloudData.name} เข้าสู่ระบบ?`)) return;
     const isClaim = cloudData.details?.case === 'CLAIM';
+    const isCutter = cloudData.details?.isCutter || (cloudData.details?.cutterDetails && (cloudData.details.cutterDetails.normal + cloudData.details.cutterDetails.withSwitch > 0));
+    
     const newOrder = {
         id: Date.now(),
         name: cloudData.name + (isClaim ? " (เคลม)" : " (ออนไลน์)"),
-        type: isClaim ? 'เคลม' : (cloudData.details?.isCutter ? 'เครื่องตัด' : 'ดอกไม้'),
+        type: isClaim ? 'เคลม' : (isCutter ? 'เครื่องตัด' : 'ดอกไม้'),
         total: cloudData.total,
         shipping: 0,
         details: cloudData.details || {},
