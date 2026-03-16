@@ -349,7 +349,6 @@ function saveOrder(productType) {
     let basePrice = document.getElementById("basePrice").value;
     let total = calcTotal();
     
-    // ตั้งค่า Default สำหรับเครื่องตัด
     let cutterData = { normal: 0, withSwitch: 0 };
 
     if (productType === 'เครื่องตัด' && orderBeingEdited === null) {
@@ -459,7 +458,6 @@ function renderOrderList() {
         const total = cleanPrice(o.total), deposit = o.deposit || 0, remaining = total - deposit;
         const address = o.details.address || "";
         
-        // สรุปจำนวนเครื่องตัดถ้ามี
         let cutterLabel = "";
         if(isCutter && o.details.cutterDetails) {
             cutterLabel = `<div style="font-size:10px; color:${accent}">ปกติ: ${o.details.cutterDetails.normal} | สวิตช์: ${o.details.cutterDetails.withSwitch}</div>`;
@@ -636,15 +634,22 @@ function showTaskSummary() {
     let cutterSwitchQty = 0; 
 
     pendingOrders.forEach(o => {
-        if (o.type === 'เครื่องตัด') {
-            if(o.details.cutterDetails) {
-                cutterNormalQty += o.details.cutterDetails.normal;
-                cutterSwitchQty += o.details.cutterDetails.withSwitch;
-            } else {
-                if (o.details.hasSwitch) { cutterSwitchQty += (o.details.qty || 1); } 
-                else { cutterNormalQty += (o.details.qty || 1); }
+        // --- ส่วนที่แก้ไข: ปรับลำดับการเช็คให้แม่นยำขึ้น ---
+        // 1. เช็คจาก cutterDetails ก่อน (มาตรฐานใหม่)
+        if (o.details && o.details.cutterDetails) {
+            cutterNormalQty += (Number(o.details.cutterDetails.normal) || 0);
+            cutterSwitchQty += (Number(o.details.cutterDetails.withSwitch) || 0);
+        } 
+        // 2. เช็คจาก hasSwitch (สำหรับออเดอร์เก่าที่ค้างอยู่ในเครื่อง)
+        else if (o.type === 'เครื่องตัด' || o.type === 'เคลม') {
+            if (o.details?.hasSwitch) { 
+                cutterSwitchQty += (Number(o.details.qty) || 1); 
+            } else if (o.details?.qty) {
+                cutterNormalQty += (Number(o.details.qty) || 1);
             }
-        } else if (o.type === 'ดอกไม้') {
+        }
+        
+        if (o.details && o.details.flowers) {
             const flowers = o.details.flowers;
             for (let type in flowers) {
                 for (let color in flowers[type]) {
@@ -674,80 +679,95 @@ function showTaskSummary() {
     document.getElementById("receiptModal").style.display = "block";
 }
 
+// --- ฟังก์ชันดึงออเดอร์จาก Cloud (แก้ไขใหม่ทั้งหมดให้ใช้ได้จริง) ---
 async function fetchCloudOrders() {
     const listDiv = document.getElementById("cloud-list");
     listDiv.innerHTML = "<div style='text-align:center; padding:20px;'>กำลังโหลด...</div>";
+    
     try {
         const { data, error } = await _supabase.from('orders').select('*').eq('status', false);
         if (error) throw error;
-        
+
         const navCloud = document.getElementById("nav-cloud");
         if(navCloud) navCloud.innerText = data.length > 0 ? `(${data.length})` : "";
-        
-        if (data.length === 0) { 
-            listDiv.innerHTML = "<div style='text-align:center; padding:20px; color:gray;'>ไม่มีออเดอร์ใหม่จากลูกค้าครับ ☁️</div>"; 
+
+        if (!data || data.length === 0) { 
+            listDiv.innerHTML = "<div style='text-align:center; padding:20px; color:gray;'>ไม่มีออเดอร์ใหม่ครับ ☁️</div>"; 
             return; 
         }
 
         listDiv.innerHTML = data.map(o => {
             const isClaim = o.details?.case === 'CLAIM';
-            const addr = o.details?.address || "";
-            const slipUrl = o.slip_url || 'slip.png';
             const accent = isClaim ? 'var(--claim-accent)' : 'var(--purple-dark)';
+            const slipUrl = o.slip_url || '';
             
-            // ตรวจสอบเครื่องตัดจาก Cloud
-            let cutterSum = "";
-            if(o.details?.cutterDetails) {
-                cutterSum = `<div style="font-size:11px; color:#26a69a; margin-top:5px;">✂️ ปกติ: ${o.details.cutterDetails.normal} | สวิตช์: ${o.details.cutterDetails.withSwitch}</div>`;
-            }
-
             return `
             <div class="card" style="border-left: 8px solid ${accent}; margin-bottom: 10px;">
-                <div style="display:flex; justify-content:space-between; font-size:11px; font-weight:bold; color:${accent}">
-                    <span>${isClaim ? '🛠️ งานเคลม' : '☁️ ออนไลน์'}</span>
-                    <button class="btn-view-slip" onclick="window.open('${slipUrl}', '_blank')">🔍 ดูสลิป</button>
+                <div style="display:flex; justify-content:space-between; align-items:center;">
+                    <span style="font-weight:bold; color:${accent}">${isClaim ? '🛠️ งานเคลม' : '☁️ ออนไลน์'}</span>
+                    ${slipUrl ? `<button class="btn-view-slip" onclick="window.open('${slipUrl}', '_blank')">🔍 ดูสลิป</button>` : ''}
                 </div>
                 <div style="margin:5px 0"><b>👤 ${o.name}</b></div>
-                ${cutterSum}
-                ${isClaim ? `<div style="font-size:11px; color:red; margin-bottom:5px;">⚠️ ปัญหา: ${o.details.reason}</div>` : ''}
-                ${addr ? `<div style="font-size:11px; color:#666; background:#f9f9f9; padding:8px; border-radius:10px; margin-bottom:10px; border:1px solid #ddd;">
-                    📍 ${addr} <br>
-                    <button class="btn-copy-address" style="margin-top:5px;" onclick="copyToClipboard('${addr.replace(/'/g, "\\'").replace(/\n/g, " ")}')">📋 คัดลอกที่อยู่</button>
-                </div>` : ''}
-                <button onclick='approveCloudOrder("${o.id}", ${JSON.stringify(o).replace(/'/g, "\\'")})' style="width:100%; background:${accent}; color:white; border:none; padding:10px; border-radius:12px; font-weight:bold; cursor:pointer;">
+                <div style="font-size:11px; color:#666; background:#f9f9f9; padding:8px; border-radius:10px; margin-bottom:10px; border:1px solid #ddd;">
+                    📍 ${o.details?.address || 'ไม่มีที่อยู่'}
+                </div>
+                <button onclick='approveCloudOrder("${o.id}")' style="width:100%; background:${accent}; color:white; border:none; padding:10px; border-radius:12px; font-weight:bold; cursor:pointer;">
                     📥 รับออเดอร์เข้าเครื่อง
                 </button>
             </div>
-        `}).join("");
+            `;
+        }).join("");
     } catch (err) {
-        listDiv.innerHTML = `<div style="color:red; text-align:center; padding:20px;">โหลดไม่สำเร็จ ลองรีเฟรชใหม่นะครับ</div>`;
+        listDiv.innerHTML = `<div style="color:red; text-align:center; padding:20px;">โหลดไม่สำเร็จ: ${err.message}</div>`;
     }
 }
 
-async function approveCloudOrder(dbId, cloudData) {
-    if (!confirm(`ยืนยันการรับออเดอร์ของคุณ ${cloudData.name} เข้าสู่ระบบ?`)) return;
-    const isClaim = cloudData.details?.case === 'CLAIM';
-    const isCutter = cloudData.details?.isCutter || (cloudData.details?.cutterDetails && (cloudData.details.cutterDetails.normal + cloudData.details.cutterDetails.withSwitch > 0));
-    
-    const newOrder = {
-        id: Date.now(),
-        name: cloudData.name + (isClaim ? " (เคลม)" : " (ออนไลน์)"),
-        type: isClaim ? 'เคลม' : (isCutter ? 'เครื่องตัด' : 'ดอกไม้'),
-        total: cloudData.total,
-        shipping: 0,
-        details: cloudData.details || {},
-        date: new Date().toLocaleDateString('th-TH'),
-        status: false,
-        paid: true,
-        deposit: cloudData.total
-    };
-    orders.push(newOrder);
-    updateStore(); 
-    await _supabase.from('orders').update({ status: true }).eq('id', dbId);
-    alert("ดึงออเดอร์สำเร็จ!");
-    fetchCloudOrders();
-}
+async function approveCloudOrder(dbId) {
+    if (!confirm("ยืนยันการรับออเดอร์นี้เข้าเครื่อง?")) return;
 
+    try {
+        const { data: cloudData, error: fetchErr } = await _supabase.from('orders').select('*').eq('id', dbId).single();
+        if (fetchErr) throw fetchErr;
+
+        const isClaim = cloudData.details?.case === 'CLAIM';
+        
+        // --- ส่วนที่แก้ไข: ดึงค่าจาก Cloud มาใช้ตรงๆ ไม่ต้องคำนวณใหม่เอง ---
+        // ถ้าหน้าเคลมส่ง cutterDetails มา หน้าแอดมินจะใช้ค่านั้นเลย
+        let cDetails = cloudData.details?.cutterDetails || { normal: 0, withSwitch: 0 };
+        
+        // เผื่อกรณีโค้ดหน้าเคลมรุ่นเก่าที่ส่งมาเป็น text 'switch' ใน cutterType
+        if (isClaim && cloudData.details?.cutterType === 'switch') {
+            cDetails.withSwitch = 1;
+            cDetails.normal = 0;
+        }
+
+        const newOrder = {
+            id: Date.now(),
+            name: cloudData.name, 
+            type: isClaim ? 'เคลม' : (cloudData.details?.isCutter ? 'เครื่องตัด' : 'ดอกไม้'),
+            total: cleanPrice(cloudData.total),
+            shipping: 0,
+            details: {
+                ...cloudData.details,
+                cutterDetails: cDetails // ใช้ค่าที่ส่งมาจากหน้าเคลม
+            },
+            date: new Date().toLocaleDateString('th-TH'),
+            status: false,
+            paid: true, 
+            deposit: cleanPrice(cloudData.total)
+        };
+
+        orders.push(newOrder);
+        updateStore();
+
+        await _supabase.from('orders').update({ status: true }).eq('id', dbId);
+        
+        alert("รับออเดอร์เรียบร้อย! ข้อมูลแยกประเภทปกติ/สวิตช์ให้แล้วครับ");
+        fetchCloudOrders();
+    } catch (err) {
+        alert("เกิดข้อผิดพลาด: " + err.message);
+    }
+}
 document.getElementById("paper-grid").innerHTML = ["ดำ", "ขาว", "ชมพู", "แดง"].map(c => `<button class="square-btn" style="background:${colors[c]}; color:${c==='ขาว'?'#555':'#fff'}" onclick="selectedPapers.push('${c}'); document.getElementById('paperChoice').innerText='เลือก: '+selectedPapers.join(',')">${c}</button>`).join("");
 document.getElementById("bow-grid").innerHTML = ["แดง", "ขาว", "ชมพู", "น้ำเงิน", "ม่วง", "ชมพูแก้ว", "แดงแก้ว"].map(c => `<button class="square-btn" style="background:${colors[c]}; color:${c==='ขาว'?'#555':'#fff'}" onclick="selectedBows.push('${c}'); document.getElementById('bowChoice').innerText='เลือก: '+selectedBows.join(',')">${c}</button>`).join("");
 document.getElementById("extra-grid").innerHTML = Object.keys(extraPrice).map(e => `<button class="square-btn" style="background:#f2b5d4; color:#5a3d45;" onclick="selectedExtras['${e}']=(selectedExtras['${e}']||0)+1; calcTotal(); renderExtraChoice();">${e}+${extraPrice[e]}</button>`).join("");
