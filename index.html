@@ -211,6 +211,13 @@
         </table>
     </div>
 
+    <div class="card" style="margin-bottom:15px; border: 1px solid #eee;">
+    <h3 style="font-size: 0.9rem; margin-bottom: 15px; color: #888; text-align: center;">📦 สรุปจำนวนสินค้าที่ขายได้</h3>
+    <div id="product-stats-content" style="font-size: 13px;">
+        </div>
+</div>
+
+
     <div class="card" style="border: 1px solid var(--pink); background: #fff5f8;">
         <h3>💾 จัดการข้อมูล (Backup)</h3>
         <div style="display: flex; gap: 10px; flex-wrap: wrap;">
@@ -230,12 +237,24 @@
     
     <div class="card">
         <h3>ประวัติค่าใช้จ่าย</h3>
-        <table id="cost-table">
-            <thead><tr><th>วันที่</th><th>รายการ</th><th>ยอด</th><th>ลบ</th></tr></thead>
-            <tbody id="cost-history-body"></tbody>
-        </table>
+        <button onclick="openCostModal()" style="width:100%; background:white; color:var(--purple-dark); border:1px solid var(--purple-dark); padding:10px; border-radius:12px; font-weight:bold; cursor: pointer;">
+            📋 ดูรายการค่าใช้จ่ายทั้งหมด
+        </button>
     </div>
 </div> 
+
+<div id="costModal" class="modal">
+    <div class="modal-content" style="max-width: 90%; width: 350px;">
+        <h3 style="margin-top:0;">รายการค่าใช้จ่าย</h3>
+        <div style="max-height: 300px; overflow-y: auto;">
+            <table id="cost-table">
+                <thead><tr><th>วันที่</th><th>รายการ</th><th>ยอด</th><th>ลบ</th></tr></thead>
+                <tbody id="cost-history-body"></tbody>
+            </table>
+        </div>
+        <button onclick="document.getElementById('costModal').style.display='none'" style="width:100%; background:var(--text); color:white; padding:12px; border:none; border-radius:15px; margin-top:15px; font-weight:bold;">ปิด</button>
+    </div>
+</div>
 
 <div id="receiptModal" class="modal">
     <div class="modal-content">
@@ -583,16 +602,60 @@ async function shareReceipt() {
     } catch (e) { alert("ล้มเหลว: " + e); }
 }
 
+// --- ฟังก์ชันเสริม: เปิด Modal ค่าใช้จ่าย ---
+function openCostModal() {
+    document.getElementById('costModal').style.display = 'block';
+}
+
 function renderSummary() {
+    // 1. คำนวณยอดเงิน
     const totalSales = orders.reduce((s, o) => s + cleanPrice(o.total), 0);
     const cost = costs.reduce((s, c) => s + (Number(c.amount) || 0), 0);
+    
     const flowerOrders = orders.filter(o => o.type === 'ดอกไม้');
     const fPaid = flowerOrders.reduce((s, o) => s + (o.paid ? cleanPrice(o.total) : (o.deposit || 0)), 0);
     const fPending = flowerOrders.reduce((s, o) => s + (o.paid ? 0 : (cleanPrice(o.total) - (o.deposit || 0))), 0);
+    
     const cutterOrders = orders.filter(o => o.type === 'เครื่องตัด');
     const cPaid = cutterOrders.reduce((s, o) => s + (o.paid ? cleanPrice(o.total) : (o.deposit || 0)), 0);
     const cPending = cutterOrders.reduce((s, o) => s + (o.paid ? 0 : (cleanPrice(o.total) - (o.deposit || 0))), 0);
 
+    // 2. คำนวณจำนวนสินค้าแยกประเภท (แก้ไข Logic ตรงนี้ให้ตรงกับตอนบันทึก)
+    let cutNormal = 0, cutSwitch = 0, totalFlowers = 0;
+    let flowerCounts = {};
+
+    orders.forEach(o => {
+        // --- นับเครื่องตัด ---
+        if (o.type === 'เครื่องตัด') {
+            if (o.details && o.details.cutterDetails) {
+                // เคสบันทึกจากหน้า Flower Studio (มี cutterDetails)
+                cutNormal += (Number(o.details.cutterDetails.normal) || 0);
+                cutSwitch += (Number(o.details.cutterDetails.withSwitch) || 0);
+            } else if (o.details) {
+                // เคสเผื่อดึงมาจาก Cloud หรือรูปแบบเก่า
+                if (o.details.hasSwitch) {
+                    cutSwitch += (Number(o.details.qty) || 1);
+                } else {
+                    cutNormal += (Number(o.details.qty) || 1);
+                }
+            }
+        }
+        
+        // --- นับดอกไม้ ---
+        if (o.type === 'ดอกไม้' && o.details && o.details.flowers) {
+            for (let type in o.details.flowers) {
+                for (let color in o.details.flowers[type]) {
+                    let count = Number(o.details.flowers[type][color]) || 0;
+                    if (count > 0) {
+                        flowerCounts[color] = (flowerCounts[color] || 0) + count;
+                        totalFlowers += count;
+                    }
+                }
+            }
+        }
+    });
+
+    // 3. แสดงผลตัวเลขยอดเงิน
     document.getElementById("stat-sale").innerText = totalSales.toLocaleString();
     document.getElementById("stat-cost").innerText = cost.toLocaleString();
     document.getElementById("stat-profit").innerText = (totalSales - cost).toLocaleString();
@@ -600,8 +663,50 @@ function renderSummary() {
     document.getElementById("pay-flower-pending").innerText = fPending.toLocaleString();
     document.getElementById("pay-cutter-done").innerText = cPaid.toLocaleString();
     document.getElementById("pay-cutter-pending").innerText = cPending.toLocaleString();
-    document.getElementById("cost-history-body").innerHTML = [...costs].reverse().map((c, i) => `<tr><td>${c.date}</td><td>${c.desc}</td><td>${Number(c.amount).toLocaleString()}</td><td><button onclick="deleteCost(${costs.length-1-i})" style="border:none; color:red; background:none;">ลบ</button></td></tr>`).join("");
+
+    // 4. แสดงผลตารางสรุปสินค้า (UI ซ้าย-ขวา)
+    let statHtml = `
+    <div style="display: flex; gap: 15px; align-items: flex-start;">
+        <div style="flex: 1; background: #f0f9f8; padding: 12px; border-radius: 15px; border: 1px solid #e0f2f1;">
+            <b style="color:var(--cutter-color); display:block; margin-bottom:8px; border-bottom:1px solid #c8e6c9; padding-bottom:3px;">✂️ เครื่องตัด</b>
+            <div style="display:flex; justify-content:space-between; margin-bottom:3px;"><span>ปกติ:</span> <b>${cutNormal}</b></div>
+            <div style="display:flex; justify-content:space-between; margin-bottom:3px;"><span>สวิตช์:</span> <b>${cutSwitch}</b></div>
+            <hr style="border:0; border-top:1px dashed #ccc; margin:8px 0;">
+            <div style="display:flex; justify-content:space-between; color:var(--cutter-color);"><span>รวม:</span> <b>${cutNormal + cutSwitch} ชิ้น</b></div>
+        </div>
+
+        <div style="flex: 1.2; background: #fff5f8; padding: 12px; border-radius: 15px; border: 1px solid #fce4ec;">
+            <b style="color:var(--pink-dark); display:block; margin-bottom:8px; border-bottom:1px solid #f8bbd0; padding-bottom:3px;">🌹 ดอกไม้แยกสี</b>
+            <div style="max-height: 120px; overflow-y: auto; margin-bottom: 5px;">
+    `;
+    
+    for (let f in flowerCounts) {
+        statHtml += `<div style="display:flex; justify-content:space-between; margin-bottom:3px;">
+                        <span>${f}:</span> <b>${flowerCounts[f]}</b>
+                     </div>`;
+    }
+    
+    if (Object.keys(flowerCounts).length === 0) statHtml += `<div style="text-align:center; color:#ccc; padding:10px;">- ไม่มีข้อมูล -</div>`;
+
+    statHtml += `
+            </div>
+            <hr style="border:0; border-top:1px dashed #ccc; margin:8px 0;">
+            <div style="display:flex; justify-content:space-between; color:var(--pink-dark);"><span>รวมทั้งหมด:</span> <b>${totalFlowers} ดอก</b></div>
+        </div>
+    </div>`;
+
+    document.getElementById("product-stats-content").innerHTML = statHtml;
+
+    // 5. ประวัติค่าใช้จ่ายใน Modal
+    document.getElementById("cost-history-body").innerHTML = [...costs].reverse().map((c, i) => `
+        <tr>
+            <td>${c.date}</td>
+            <td>${c.desc}</td>
+            <td>${Number(c.amount).toLocaleString()}</td>
+            <td><button onclick="deleteCost(${costs.length-1-i})" style="border:none; color:red; background:none; cursor:pointer;">ลบ</button></td>
+        </tr>`).join("");
 }
+
 
 function updatePendingNav() { const p = orders.filter(o => !o.status).length; document.getElementById("nav-pending").innerText = p > 0 ? `(${p})` : ""; }
 function toggleStatus(i) { orders[i].status = !orders[i].status; updateStore(); }
@@ -634,13 +739,10 @@ function showTaskSummary() {
     let cutterSwitchQty = 0; 
 
     pendingOrders.forEach(o => {
-        // --- ส่วนที่แก้ไข: ปรับลำดับการเช็คให้แม่นยำขึ้น ---
-        // 1. เช็คจาก cutterDetails ก่อน (มาตรฐานใหม่)
         if (o.details && o.details.cutterDetails) {
             cutterNormalQty += (Number(o.details.cutterDetails.normal) || 0);
             cutterSwitchQty += (Number(o.details.cutterDetails.withSwitch) || 0);
         } 
-        // 2. เช็คจาก hasSwitch (สำหรับออเดอร์เก่าที่ค้างอยู่ในเครื่อง)
         else if (o.type === 'เครื่องตัด' || o.type === 'เคลม') {
             if (o.details?.hasSwitch) { 
                 cutterSwitchQty += (Number(o.details.qty) || 1); 
@@ -679,7 +781,6 @@ function showTaskSummary() {
     document.getElementById("receiptModal").style.display = "block";
 }
 
-// --- ฟังก์ชันดึงออเดอร์จาก Cloud (แก้ไขใหม่ทั้งหมดให้ใช้ได้จริง) ---
 async function fetchCloudOrders() {
     const listDiv = document.getElementById("cloud-list");
     listDiv.innerHTML = "<div style='text-align:center; padding:20px;'>กำลังโหลด...</div>";
@@ -724,18 +825,12 @@ async function fetchCloudOrders() {
 
 async function approveCloudOrder(dbId) {
     if (!confirm("ยืนยันการรับออเดอร์นี้เข้าเครื่อง?")) return;
-
     try {
         const { data: cloudData, error: fetchErr } = await _supabase.from('orders').select('*').eq('id', dbId).single();
         if (fetchErr) throw fetchErr;
 
         const isClaim = cloudData.details?.case === 'CLAIM';
-        
-        // --- ส่วนที่แก้ไข: ดึงค่าจาก Cloud มาใช้ตรงๆ ไม่ต้องคำนวณใหม่เอง ---
-        // ถ้าหน้าเคลมส่ง cutterDetails มา หน้าแอดมินจะใช้ค่านั้นเลย
         let cDetails = cloudData.details?.cutterDetails || { normal: 0, withSwitch: 0 };
-        
-        // เผื่อกรณีโค้ดหน้าเคลมรุ่นเก่าที่ส่งมาเป็น text 'switch' ใน cutterType
         if (isClaim && cloudData.details?.cutterType === 'switch') {
             cDetails.withSwitch = 1;
             cDetails.normal = 0;
@@ -747,10 +842,7 @@ async function approveCloudOrder(dbId) {
             type: isClaim ? 'เคลม' : (cloudData.details?.isCutter ? 'เครื่องตัด' : 'ดอกไม้'),
             total: cleanPrice(cloudData.total),
             shipping: 0,
-            details: {
-                ...cloudData.details,
-                cutterDetails: cDetails // ใช้ค่าที่ส่งมาจากหน้าเคลม
-            },
+            details: { ...cloudData.details, cutterDetails: cDetails },
             date: new Date().toLocaleDateString('th-TH'),
             status: false,
             paid: true, 
@@ -759,17 +851,14 @@ async function approveCloudOrder(dbId) {
 
         orders.push(newOrder);
         updateStore();
-
         await _supabase.from('orders').update({ status: true }).eq('id', dbId);
-        
-        alert("รับออเดอร์เรียบร้อย! ข้อมูลแยกประเภทปกติ/สวิตช์ให้แล้วครับ");
+        alert("รับออเดอร์เรียบร้อย!");
         fetchCloudOrders();
-    } catch (err) {
-        alert("เกิดข้อผิดพลาด: " + err.message);
-    }
+    } catch (err) { alert("เกิดข้อผิดพลาด: " + err.message); }
 }
-document.getElementById("paper-grid").innerHTML = ["ดำ", "ขาว", "ชมพู", "แดง"].map(c => `<button class="square-btn" style="background:${colors[c]}; color:${c==='ขาว'?'#555':'#fff'}" onclick="selectedPapers.push('${c}'); document.getElementById('paperChoice').innerText='เลือก: '+selectedPapers.join(',')">${c}</button>`).join("");
-document.getElementById("bow-grid").innerHTML = ["แดง", "ขาว", "ชมพู", "น้ำเงิน", "ม่วง", "ชมพูแก้ว", "แดงแก้ว"].map(c => `<button class="square-btn" style="background:${colors[c]}; color:${c==='ขาว'?'#555':'#fff'}" onclick="selectedBows.push('${c}'); document.getElementById('bowChoice').innerText='เลือก: '+selectedBows.join(',')">${c}</button>`).join("");
+
+document.getElementById("paper-grid").innerHTML = ["ดำ", "ขาว", "ชมพู", "แดง"].map(c => `<button class="square-btn" style="background:${colors[c]}; color: ${c==='ขาว'?'#555':'#fff'}" onclick="selectedPapers.push('${c}'); document.getElementById('paperChoice').innerText='เลือก: '+selectedPapers.join(',')">${c}</button>`).join("");
+document.getElementById("bow-grid").innerHTML = ["แดง", "ขาว", "ชมพู", "น้ำเงิน", "ม่วง", "ชมพูแก้ว", "แดงแก้ว"].map(c => `<button class="square-btn" style="background:${colors[c]}; color: ${c==='ขาว'?'#555':'#fff'}" onclick="selectedBows.push('${c}'); document.getElementById('bowChoice').innerText='เลือก: '+selectedBows.join(',')">${c}</button>`).join("");
 document.getElementById("extra-grid").innerHTML = Object.keys(extraPrice).map(e => `<button class="square-btn" style="background:#f2b5d4; color:#5a3d45;" onclick="selectedExtras['${e}']=(selectedExtras['${e}']||0)+1; calcTotal(); renderExtraChoice();">${e}+${extraPrice[e]}</button>`).join("");
 
 renderFlowers();
