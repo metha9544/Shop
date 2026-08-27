@@ -1,0 +1,19 @@
+{
+  "name": "METIST Flower Studio",
+  "short_name": "METIST",
+  "id": "./",
+  "start_url": "./",
+  "scope": "./",
+  "display": "standalone",
+  "background_color": "#fdf2f7",
+  "theme_color": "#f8c8dc",
+  "lang": "th",
+  "icons": [
+    {
+      "src": "logo.png.jpg",
+      "sizes": "any",
+      "type": "image/jpeg",
+      "purpose": "any"
+    }
+  ]
+}
