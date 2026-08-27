@@ -18,7 +18,7 @@
   const POLL_MS = 30000;
   const RECENT_TTL_MS = 2 * 60 * 1000;
   const CHANNEL_NAME = "metist_order_notify_v1";
-  const PUSH_PUBLIC_KEY = "BN8rLTo9Hh1F3sRWUgxwXLhQG7gADtiPqv522zNqLNu0NBRj97CQTRUJzoaWAApjy4StX1KXa1TfMzP9l1bWjiw";
+  const PUSH_PUBLIC_KEY = "BMC-8yDnA3llq7vcLBFkSmV3Of4HE8TIBXOqMWyLNADEJZLjptRGuIiceIDpbxlGUZjYPNjYRIXAazc5V7LtcGA";
 
   let knownIds = new Set();
   let recentKeys = new Map();
