@@ -18,6 +18,7 @@
   const POLL_MS = 30000;
   const RECENT_TTL_MS = 2 * 60 * 1000;
   const CHANNEL_NAME = "metist_order_notify_v1";
+  const PUSH_PUBLIC_KEY = "BN8rLTo9Hh1F3sRWUgxwXLhQG7gADtiPqv522zNqLNu0NBRj97CQTRUJzoaWAApjy4StX1KXa1TfMzP9l1bWjiw";
 
   let knownIds = new Set();
   let recentKeys = new Map();
@@ -59,6 +60,56 @@
     } catch (err) {
       console.warn("METIST notification service worker failed:", err);
       return null;
+    }
+  }
+
+
+  function urlBase64ToUint8Array(base64String) {
+    const padding = "=".repeat((4 - (base64String.length % 4)) % 4);
+    const base64 = (base64String + padding).replace(/-/g, "+").replace(/_/g, "/");
+    const rawData = atob(base64);
+    return Uint8Array.from([...rawData].map(ch => ch.charCodeAt(0)));
+  }
+
+  async function getPushSubscription() {
+    const reg = await ensureServiceWorker();
+    if (!reg?.pushManager) return null;
+    return reg.pushManager.getSubscription();
+  }
+
+  async function callRegisterFunction(body) {
+    if (typeof _supabase === "undefined" || !_supabase?.functions?.invoke) {
+      throw new Error("Supabase client unavailable");
+    }
+    const { data, error } = await _supabase.functions.invoke("register-push", { body });
+    if (error) throw error;
+    if (data?.error) throw new Error(data.error);
+    return data;
+  }
+
+  async function subscribeServerPush(reg) {
+    let subscription = await reg.pushManager.getSubscription();
+    const pairingCode = prompt("กรอกรหัสเปิดแจ้งเตือน METIST สำหรับเครื่องนี้");
+    if (!pairingCode) throw new Error("cancelled");
+
+    if (!subscription) {
+      subscription = await reg.pushManager.subscribe({
+        userVisibleOnly: true,
+        applicationServerKey: urlBase64ToUint8Array(PUSH_PUBLIC_KEY)
+      });
+    }
+
+    try {
+      await callRegisterFunction({
+        action: "subscribe",
+        pairingCode: pairingCode.trim(),
+        subscription: subscription.toJSON(),
+        userAgent: navigator.userAgent || ""
+      });
+      return subscription;
+    } catch (err) {
+      try { await subscription.unsubscribe(); } catch (_) {}
+      throw err;
     }
   }
 
@@ -212,7 +263,7 @@
     if (enabled) {
       button.textContent = "🔔 การแจ้งเตือนเปิดอยู่";
       button.dataset.enabled = "true";
-      status.textContent = "ระบบกำลังเฝ้าดูออเดอร์ใหม่จากหน้าลูกค้า";
+      status.textContent = "Push เปิดอยู่บนเครื่องนี้ — ปิดหน้า Shop แล้วก็ยังรับแจ้งเตือนได้";
     } else if (Notification.permission === "denied") {
       button.textContent = "🔕 การแจ้งเตือนถูกบล็อก";
       button.dataset.enabled = "false";
@@ -242,12 +293,19 @@
     }
 
     let permission = Notification.permission;
-    if (permission !== "granted") {
-      permission = await Notification.requestPermission();
-    }
-
+    if (permission !== "granted") permission = await Notification.requestPermission();
     if (permission !== "granted") {
       updateUI();
+      return;
+    }
+
+    try {
+      await subscribeServerPush(reg);
+    } catch (err) {
+      if (err?.message !== "cancelled") {
+        console.warn("METIST push registration failed:", err);
+        alert("สมัคร Push ไม่สำเร็จ กรุณาตรวจรหัสเปิดแจ้งเตือนแล้วลองใหม่");
+      }
       return;
     }
 
@@ -257,7 +315,7 @@
 
     try {
       await reg.showNotification("METIST 🌸", {
-        body: "เปิดการแจ้งเตือนออเดอร์บนเครื่องนี้แล้ว",
+        body: "เปิด Push Notification บนเครื่องนี้แล้ว",
         icon: "logo.png.jpg",
         tag: "metist-notify-enabled",
         data: { url: "./" }
@@ -265,7 +323,16 @@
     } catch (_) {}
   }
 
-  function disableNotifications() {
+  async function disableNotifications() {
+    try {
+      const subscription = await getPushSubscription();
+      if (subscription) {
+        try {
+          await callRegisterFunction({ action: "unsubscribe", endpoint: subscription.endpoint });
+        } catch (_) {}
+        try { await subscription.unsubscribe(); } catch (_) {}
+      }
+    } catch (_) {}
     localStorage.setItem(PREF_KEY, "off");
     stopMonitoring();
     updateUI();
@@ -274,7 +341,7 @@
   async function handleButtonClick() {
     const enabled = localStorage.getItem(PREF_KEY) === "on" && Notification.permission === "granted";
     if (enabled) {
-      if (confirm("ปิดการแจ้งเตือนออเดอร์บนเครื่องนี้หรือไม่?")) disableNotifications();
+      if (confirm("ปิดการแจ้งเตือนออเดอร์บนเครื่องนี้หรือไม่?")) await disableNotifications();
       return;
     }
     await enableNotifications();
@@ -342,7 +409,12 @@
     if (!supportsNotifications()) return;
     if (localStorage.getItem(PREF_KEY) === "on" && Notification.permission === "granted") {
       await ensureServiceWorker();
-      await startMonitoring({ prime: true });
+      const subscription = await getPushSubscription();
+      if (subscription) {
+        await startMonitoring({ prime: true });
+      } else {
+        localStorage.setItem(PREF_KEY, "off");
+      }
     }
     updateUI();
   }
